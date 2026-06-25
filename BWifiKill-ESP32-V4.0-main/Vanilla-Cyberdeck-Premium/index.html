@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" class="dark bg-[#030304] text-zinc-300 antialiased selection:bg-cyan-500/30">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BWIFIKILL ESP32 SYSTEM V4</title>
+
+    <!-- Tailwind CSS (CDN for zero-build workflow) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Core Modular Styles -->
+    <link rel="stylesheet" href="css/materials.css">
+    <link rel="stylesheet" href="css/effects.css">
+    <link rel="stylesheet" href="css/terminal.css">
+</head>
+<body class="h-screen w-full flex justify-center items-center overflow-hidden bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=3540&auto=format&fit=crop');">
+    
+    <!-- Cinematic Dark Overlay -->
+    <div class="fixed inset-0 bg-[#030304]/90 backdrop-blur-3xl z-0 pointer-events-none"></div>
+
+    <!-- MAIN DASHBOARD CONTAINER -->
+    <div class="relative z-10 w-full max-w-[1600px] h-full max-h-[95vh] flex flex-col p-4 lg:p-6 drop-shadow-2xl">
+        
+        <!-- HEADER -->
+        <header class="flex justify-between items-center mb-6 shrink-0 bg-black/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.5)]">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-cyan-950 to-black border border-cyan-900/50 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(8,145,178,0.2)]">
+                    <i data-lucide="radio" class="w-6 h-6 text-cyan-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold font-mono tracking-widest text-zinc-100 glow-text flex items-center gap-3">
+                        BWIFIKILL ESP32
+                        <span id="connection-badge" class="px-2 py-0.5 rounded text-[10px] font-black tracking-widest bg-zinc-900 text-zinc-500 border border-zinc-800 uppercase shadow-inner">DISCONNECTED</span>
+                    </h1>
+                    <p class="text-xs font-mono text-zinc-500 tracking-wider">SYSTEM V4 • NEURAL INTERFACE</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <!-- IP Readout -->
+                <div class="flex flex-col items-end">
+                    <span class="text-[9px] text-zinc-500 tracking-wider font-mono font-bold mb-0.5">TARGET IP</span>
+                    <span id="ip-readout" class="text-xs font-mono text-zinc-300">192.168.4.1</span>
+                </div>
+                <div class="h-6 w-[1px] bg-zinc-800/80"></div>
+                
+                <!-- Uptime Readout -->
+                <div class="flex flex-col items-end">
+                    <span class="text-[9px] text-zinc-500 tracking-wider font-mono font-bold mb-0.5">UPTIME</span>
+                    <span id="uptime-readout" class="text-xs font-mono text-zinc-300 tabular-nums">00:00:00</span>
+                </div>
+                <div class="h-6 w-[1px] bg-zinc-800/80"></div>
+
+                <!-- Hardware RX/TX Diodes -->
+                <div class="flex gap-3 h-[42px] shrink-0 items-center bg-black/50 border border-zinc-900/80 rounded-lg px-3 shadow-inner">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-mono font-bold text-zinc-500 tracking-wider">TX</span>
+                        <div id="tx-led" class="w-2.5 h-2.5 rounded-full bg-cyan-950 border border-cyan-900 transition-colors duration-75"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-mono font-bold text-zinc-500 tracking-wider">RX</span>
+                        <div id="rx-led" class="w-2.5 h-2.5 rounded-full bg-emerald-950 border border-emerald-900 transition-colors duration-75"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- THREE COLUMN MAIN SECTION -->
+        <main class="flex flex-col lg:flex-row gap-4 flex-1 overflow-hidden min-h-0 h-full max-h-full mb-4">
+            
+            <!-- LEFT COLUMN: SERIAL LOG -->
+            <div class="lg:w-1/4 relative min-h-[300px] lg:min-h-0 h-full shrink-0">
+                <div class="absolute inset-0 flex flex-col material-panel overflow-hidden">
+                    
+                    <div class="flex justify-between items-center border-b border-zinc-800/80 p-3 pb-2 shrink-0 bg-black/40">
+                        <h2 class="text-[10px] font-bold font-mono tracking-widest text-zinc-400 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-pulse"></span>
+                            SERIAL LOG
+                        </h2>
+                        <div class="flex gap-2 text-[10px] font-mono text-zinc-500">
+                            <button id="btn-clear-log" class="hardware-btn-small">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i> CLEAR
+                            </button>
+                            <button id="btn-toggle-time" class="hardware-btn-small active">TIME</button>
+                            <button id="btn-toggle-pause" class="hardware-btn-small"><i data-lucide="pause" class="w-3 h-3"></i> PAUSE</button>
+                        </div>
+                    </div>
+
+                    <!-- Cyberdeck Terminal Viewport -->
+                    <div id="terminal-viewport" class="flex-1 overflow-y-auto min-h-0 pt-2 pb-2 pl-4 pr-2 font-mono text-left text-[11px] leading-[1.4] space-y-0.5 select-text cyberdeck-scrollbar terminal-scanlines shadow-inner-heavy">
+                        <!-- Logs injected by JS here -->
+                        <div id="terminal-anchor"></div>
+                    </div>
+
+                    <div class="px-4 pb-3 pt-2 border-t border-zinc-800/80 flex justify-between items-center shrink-0 bg-black/40">
+                        <span class="text-[10px] font-mono font-bold text-zinc-500">DIAG LEVEL</span>
+                        <select id="diag-level" class="bg-zinc-950 border border-zinc-800 text-[10px] font-mono font-bold text-zinc-400 rounded px-2 py-1 focus:ring-1 focus:ring-zinc-700 outline-none cursor-pointer h-6 shadow-inner">
+                            <option value="INFO">INFO</option>
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="WARN">WARN</option>
+                            <option value="ERROR">ERROR</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER COLUMN: OLED RENDERING -->
+            <div class="lg:w-2/4 relative min-h-[300px] lg:min-h-0 h-full shrink-0 flex flex-col gap-4">
+                <div class="absolute inset-0 flex flex-col">
+                    <div class="flex-1 material-panel flex flex-col overflow-hidden relative group p-6">
+                        
+                        <!-- Screen Bezel -->
+                        <div class="w-full h-full flex items-center justify-center bg-black rounded-xl border border-zinc-800/50 shadow-[inset_0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
+                            <!-- OLED Display Container (Multiple Layers) -->
+                            <div id="oled-container" class="relative w-[384px] h-[192px] scale-150 rendering-pixelated" style="transform-origin: center;">
+                                <!-- Canvas Base Layer -->
+                                <canvas id="oled-base" width="128" height="64" class="absolute inset-0 w-full h-full z-10"></canvas>
+                                <!-- Phosphor Ghosting Layer -->
+                                <canvas id="oled-phosphor" width="128" height="64" class="absolute inset-0 w-full h-full z-20 opacity-60 mix-blend-screen"></canvas>
+                                <!-- CRT Scanline/Vignette Overlay -->
+                                <div class="absolute inset-0 z-30 pointer-events-none crt-overlay opacity-40"></div>
+                            </div>
+                        </div>
+
+                        <!-- Top Status Readouts (Absolute) -->
+                        <div class="absolute top-8 left-8 flex flex-col gap-1 pointer-events-none z-40">
+                            <span class="text-[10px] font-mono text-cyan-400/50 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></span>
+                                SIGNAL ACQUIRED
+                            </span>
+                        </div>
+                        <div class="absolute top-8 right-8 pointer-events-none z-40">
+                            <span id="fps-counter" class="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-wider">0 FPS</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: HARDWARE CONTROLS -->
+            <div class="lg:w-1/4 relative min-h-[400px] lg:min-h-0 h-full shrink-0">
+                <div class="absolute inset-0 flex flex-col gap-4 overflow-y-auto cyberdeck-scrollbar pr-1">
+                    
+                    <!-- Advanced Color Engine -->
+                    <div class="material-panel p-4 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-mono font-bold text-zinc-300 tracking-widest flex items-center gap-2">
+                                <i data-lucide="palette" class="w-3.5 h-3.5 text-zinc-400"></i>
+                                OLED ENGINE
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-mono font-bold text-zinc-500">INVERT</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="invert-toggle" class="sr-only" />
+                                    <div class="w-8 h-4 bg-zinc-900 border border-zinc-700 rounded-full transition-all duration-200">
+                                        <div id="invert-dot" class="absolute top-[2px] left-[2px] w-3 h-3 rounded-full bg-zinc-500 transition-transform duration-200"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- RGB Readout Box & Color Wheel Layout -->
+                        <div class="flex justify-between items-center bg-[#050506] border border-zinc-800 rounded-xl p-3 shadow-inner">
+                            <div class="flex flex-col gap-2 shrink-0 w-20">
+                                <div id="color-preview" class="h-10 w-16 rounded border border-zinc-950 shadow-[0_0_10px_rgba(0,255,255,0.4)] bg-[#00ffff] transition-colors"></div>
+                                <div class="text-xs font-mono text-zinc-300 font-bold leading-[1.4] bg-zinc-950 border border-zinc-800 rounded p-1.5 text-center shadow-inner">
+                                    <span id="rgb-r">R: 0</span><br>
+                                    <span id="rgb-g">255</span><br>
+                                    <span id="rgb-b">255</span>
+                                </div>
+                            </div>
+
+                            <!-- Native CSS Color Input styled as Wheel -->
+                            <div class="relative w-24 h-24 rounded-full border-2 border-zinc-800 shadow-[0_5px_15px_rgba(0,0,0,0.5),inset_0_2px_5px_rgba(255,255,255,0.1)] overflow-hidden shrink-0 cursor-crosshair">
+                                <input type="color" id="color-picker" value="#00ffff" class="absolute inset-[-10px] w-[120%] h-[120%] cursor-crosshair opacity-0" />
+                                <div class="absolute inset-0 rounded-full pointer-events-none" style="background: conic-gradient(red, #ff00ff, blue, #00ffff, lime, yellow, red);"></div>
+                                <div class="absolute inset-2 bg-gradient-to-tr from-black/80 to-transparent rounded-full pointer-events-none"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between px-2 py-4">
+                            <!-- Presets -->
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#00ffff] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#00ffff"></button>
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#ff00ff] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#ff00ff"></button>
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#00ff00] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#00ff00"></button>
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#ff3333] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#ff3333"></button>
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#ffb300] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#ffb300"></button>
+                            <button class="color-preset w-4 h-4 rounded-full bg-[#ffffff] ring-2 ring-zinc-700 hover:scale-110 transition-transform" data-color="#ffffff"></button>
+                        </div>
+                    </div>
+
+                    <!-- Macro Button Grid -->
+                    <div class="material-panel p-4 flex flex-col gap-3">
+                        <button class="hardware-macro-btn text-cyan-400 group" data-macro="CMD_OPEN_IR_JAMMER">
+                            <i data-lucide="activity" class="w-4 h-4 group-hover:drop-shadow-[0_0_8px_currentColor]"></i>
+                            <span>IR JAMMER</span>
+                        </button>
+                        <button class="hardware-macro-btn text-emerald-400 group" data-macro="CMD_OPEN_IR_RECEIVER">
+                            <i data-lucide="zap" class="w-4 h-4 group-hover:drop-shadow-[0_0_8px_currentColor]"></i>
+                            <span>IR RECEIVER</span>
+                        </button>
+                        <button class="hardware-macro-btn text-amber-400 group" data-macro="CMD_OPEN_WIFI_SCAN">
+                            <i data-lucide="tv" class="w-4 h-4 group-hover:drop-shadow-[0_0_8px_currentColor]"></i>
+                            <span>WIFI SCAN</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION FOOTER -->
+        <footer class="mt-auto flex flex-col lg:flex-row justify-between items-stretch gap-4 shrink-0 material-panel p-3">
+            
+            <!-- Connection Buttons -->
+            <div class="flex flex-col gap-2 w-full lg:w-[220px] shrink-0">
+                <button id="btn-connect" class="hardware-btn-large border-emerald-900/50 text-emerald-600 hover:bg-emerald-950/30 hover:text-emerald-400">
+                    <i data-lucide="link" class="w-4 h-4"></i> CONNECT
+                </button>
+                <button id="btn-disconnect" class="hardware-btn-large border-red-900/50 text-red-600 hover:bg-red-950/30 hover:text-red-400">
+                    <i data-lucide="unlink" class="w-4 h-4"></i> DISCONNECT
+                </button>
+                <button id="btn-reboot" class="hardware-btn-large border-amber-900/50 text-amber-600 hover:bg-amber-950/30 hover:text-amber-400">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> REBOOT
+                </button>
+            </div>
+
+            <!-- Central D-PAD Area -->
+            <div class="flex-1 bg-black/40 border border-zinc-900 rounded-xl p-3 shadow-inner relative flex items-center justify-center min-h-[145px]">
+                
+                <div class="grid grid-cols-3 grid-rows-3 gap-2 w-fit relative z-10">
+                    <div class="col-start-2">
+                        <button class="hardware-dpad-btn" data-btn="UP"><i data-lucide="chevron-up" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="col-start-1 row-start-2">
+                        <button class="hardware-dpad-btn" data-btn="LEFT"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="col-start-2 row-start-2">
+                        <button class="hardware-dpad-btn bg-zinc-800 border-zinc-600" data-btn="OK"><i data-lucide="circle" class="w-3 h-3 fill-zinc-500"></i></button>
+                    </div>
+                    <div class="col-start-3 row-start-2">
+                        <button class="hardware-dpad-btn" data-btn="RIGHT"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="col-start-2 row-start-3">
+                        <button class="hardware-dpad-btn" data-btn="DOWN"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+
+                <!-- Right Side Actions inside D-Pad box -->
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3">
+                    <button class="hardware-action-btn bg-red-950/20 border-red-900/50 hover:bg-red-900/40 text-red-500" data-btn="BACK">
+                        <i data-lucide="corner-down-left" class="w-4 h-4"></i> BACK
+                    </button>
+                    <button class="hardware-action-btn bg-emerald-950/20 border-emerald-900/50 hover:bg-emerald-900/40 text-emerald-500" data-btn="START">
+                        <i data-lucide="play" class="w-4 h-4"></i> START
+                    </button>
+                </div>
+
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="js/serial.js"></script>
+    <script src="js/terminal.js"></script>
+    <script src="js/oled.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

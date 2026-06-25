@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWifiKill V4 // Cyberdeck Controller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+
+    <!-- ═══════════════ TOP BAR ═══════════════ -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="topbar-logo">
+            <svg class="wifi-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00fffb" stroke-width="2.2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#00fffb" stroke="none"/></svg>
+            <span class="brand">BWifiKill</span>
+            <span class="ver-badge">V4.0</span>
+        </div>
+        <div class="topbar-sub">ESP32 Cyberdeck Controller</div>
+
+        <!-- Status cluster -->
+        <div class="topbar-status">
+            <div class="stat-block">
+                <div class="stat-label">ESP32 STATUS</div>
+                <div class="stat-val stat-red" id="statusDisplay"><span class="dot" id="statusDot"></span>DISCONNECTED</div>
+            </div>
+            <div class="stat-sep"></div>
+            <div class="stat-block">
+                <div class="stat-label">IP ADDRESS</div>
+                <div class="stat-val" id="ipDisplay">--.--.--.--</div>
+            </div>
+            <div class="stat-sep"></div>
+            <div class="stat-block">
+                <div class="stat-label">UPTIME</div>
+                <div class="stat-val" id="uptimeCounter">00:00:00</div>
+            </div>
+        </div>
+
+        <!-- IR indicators -->
+        <div class="topbar-ir">
+            <div class="ir-card">
+                <span class="ir-card-label">IR TRANSMIT</span>
+                <div class="ir-icon tx" id="indicatorTX">
+                    <!-- LED body -->
+                    <svg width="44" height="56" viewBox="0 0 44 56"><ellipse cx="22" cy="34" rx="12" ry="14" fill="#3a0000"/><ellipse cx="22" cy="34" rx="10" ry="12" fill="#880000"/><ellipse cx="22" cy="30" rx="6" ry="7" fill="#cc2222" opacity="0.8"/><line x1="18" y1="48" x2="18" y2="56" stroke="#888" stroke-width="2"/><line x1="26" y1="48" x2="26" y2="56" stroke="#888" stroke-width="2"/></svg>
+                    <!-- Emission waves -->
+                    <div class="ir-waves tx-waves">
+                        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M2 30 Q15 20 2 10" fill="none" stroke="#ff3333" stroke-width="1.5" opacity="0.6"/><path d="M10 32 Q25 20 10 8" fill="none" stroke="#ff3333" stroke-width="1.2" opacity="0.4"/><path d="M18 34 Q33 20 18 6" fill="none" stroke="#ff3333" stroke-width="1" opacity="0.25"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="ir-card">
+                <span class="ir-card-label">IR RECEIVE</span>
+                <div class="ir-icon rx" id="indicatorRX">
+                    <svg width="44" height="56" viewBox="0 0 44 56"><ellipse cx="22" cy="32" rx="13" ry="16" fill="#0a1a2a"/><ellipse cx="22" cy="32" rx="11" ry="14" fill="#102840"/><ellipse cx="22" cy="28" rx="7" ry="8" fill="#1a4060" opacity="0.8"/><line x1="18" y1="48" x2="18" y2="56" stroke="#888" stroke-width="2"/><line x1="26" y1="48" x2="26" y2="56" stroke="#888" stroke-width="2"/></svg>
+                    <div class="ir-waves rx-waves">
+                        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M28 30 Q15 20 28 10" fill="none" stroke="#00fffb" stroke-width="1.5" opacity="0.5"/><path d="M20 32 Q5 20 20 8" fill="none" stroke="#00fffb" stroke-width="1.2" opacity="0.35"/><path d="M12 34 Q-3 20 12 6" fill="none" stroke="#00fffb" stroke-width="1" opacity="0.2"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ MAIN 3-COL ═══════════════ -->
+    <div class="main-area">
+
+        <!-- LEFT: SERIAL LOG -->
+        <div class="col-left">
+            <div class="log-card">
+                <div class="log-head">
+                    <span class="log-title">SERIAL LOG</span>
+                    <div class="log-btns">
+                        <button class="sm-btn" id="btnClearLog">CLEAR</button>
+                        <button class="sm-btn" id="btnPauseLog">⏸</button>
+                    </div>
+                </div>
+                <div class="log-body" id="terminal"></div>
+                <div class="log-foot">
+                    <span class="log-foot-label">LOG LEVEL</span>
+                    <select class="log-select"><option>INFO</option><option>DEBUG</option><option>WARN</option><option>ERROR</option></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER: OLED MODULE -->
+        <div class="col-center">
+            <div class="oled-module">
+                <img src="img/componentes/oled.png" class="oled-img" alt="OLED Module" draggable="false">
+                <div class="oled-screen">
+                    <canvas id="oledCanvas" width="128" height="64"></canvas>
+                    <div class="screen-reflection"></div>
+                    <div class="screen-vignette"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: CONTROLS -->
+        <div class="col-right">
+            <!-- OLED COLOR -->
+            <div class="right-card">
+                <div class="rc-head"><span>OLED COLOR</span><button class="rc-refresh" id="btnResetColor">↻</button></div>
+                <div class="wheel-row">
+                    <div class="color-wheel" id="colorWheel"><div class="wheel-dot" id="wheelDot"></div></div>
+                    <div class="rgb-info">
+                        <div class="rgb-row">R: <span id="valR">0</span></div>
+                        <div class="rgb-row">G: <span id="valG">255</span></div>
+                        <div class="rgb-row">B: <span id="valB">251</span></div>
+                    </div>
+                </div>
+                <div class="preset-row">
+                    <button class="preset active" data-color="#00fffb" style="background:#00fffb"></button>
+                    <button class="preset" data-color="#00ff41" style="background:#00ff41"></button>
+                    <button class="preset" data-color="#ffcc33" style="background:#ffcc33"></button>
+                    <button class="preset" data-color="#ffffff" style="background:#ffffff"></button>
+                    <button class="preset" data-color="#ff2a2a" style="background:#ff2a2a"></button>
+                    <button class="preset" data-color="#ff44cc" style="background:#ff44cc"></button>
+                </div>
+            </div>
+
+            <!-- BRIGHTNESS -->
+            <div class="right-card compact">
+                <div class="rc-head"><span>BRIGHTNESS</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
+                <div class="slider-row"><input type="range" min="0" max="100" value="80" class="range-input"><span class="range-val">80%</span></div>
+            </div>
+
+            <!-- DISPLAY SETTINGS -->
+            <div class="right-card">
+                <div class="rc-head"><span>DISPLAY SETTINGS</span></div>
+                <label class="toggle-row"><span>INVERT DISPLAY</span><input type="checkbox"><span class="tog"></span></label>
+                <label class="toggle-row"><span>GRID ON GRAPH</span><input type="checkbox" checked><span class="tog"></span></label>
+                <label class="toggle-row"><span>SHOW FOOTER</span><input type="checkbox" checked><span class="tog"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ BOTTOM BAR ═══════════════ -->
+    <div class="bottom-bar">
+        <!-- Left: action buttons -->
+        <div class="bot-left">
+            <button class="act-btn" id="btnConnect"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="act-green">CONNECT</span></button>
+            <button class="act-btn" id="btnDisconnect"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg><span class="act-red">DISCONNECT</span></button>
+            <button class="act-btn" id="btnReboot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg><span class="act-yellow">REBOOT</span></button>
+        </div>
+
+        <!-- Center: D-Pad -->
+        <div class="bot-center">
+            <div class="dpad">
+                <div class="dpad-r"><button class="dbtn" id="btnUp"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+                <div class="dpad-r">
+                    <button class="dbtn" id="btnLeft"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+                    <button class="dbtn ok" id="btnOk">OK</button>
+                    <button class="dbtn" id="btnRight"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+                </div>
+                <div class="dpad-r"><button class="dbtn" id="btnDown"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button></div>
+            </div>
+            <button class="back-btn" id="btnBack">BACK</button>
+        </div>
+
+        <!-- Right: IR menus -->
+        <div class="bot-right">
+            <button class="ir-btn" id="btnIrJammer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="5" width="4" height="16"/></svg>IR JAMMER</button>
+            <button class="ir-btn" id="btnIrReceiver"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>IR RECEIVER</button>
+            <button class="ir-btn" id="btnIrRemote"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>IR REMOTE</button>
+        </div>
+    </div>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
