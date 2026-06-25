@@ -11,3 +11,6 @@ One of the most compact bare minimum feathers cyber pen testing tool.
 
 ## Author
 mxsourav
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
