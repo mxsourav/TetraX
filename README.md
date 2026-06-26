@@ -158,3 +158,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 ## ⚠️ Disclaimer
 
 This tool is intended for **authorized security research and educational purposes only**. Always obtain proper authorization before testing any network or device. The author is not responsible for any misuse.
+  
+## ??? SATAN-UI Architecture  
+Please see the [SATAN-UI README](SATAN-UI/README.md) for the complete WebSerial bridge topology and architecture diagrams. 
