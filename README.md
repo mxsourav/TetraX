@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # TetraX
 
@@ -579,4 +579,3 @@ TetraX is designed and intended exclusively for:
 *Built for research. Built for understanding. Built to push boundaries.*
 
 </div>
-]]>
