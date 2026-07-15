@@ -50,8 +50,8 @@ namespace AppConfig {
     constexpr const char* DEV_HANDLE       = "MX 100RAV";
 
     // ---------- AP del Web Dashboard ----------
-    constexpr const char* WEB_AP_SSID      = "TetraX_V4";
-    constexpr const char* WEB_AP_PASSWORD  = "tetrax40";
+    constexpr const char* WEB_AP_SSID      = "TetraX";
+    constexpr const char* WEB_AP_PASSWORD  = "mx100rav";
     constexpr const char* WEB_AP_IP        = "192.168.4.1";
     constexpr uint16_t    WEB_PORT         = 80;
 

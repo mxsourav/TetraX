@@ -64,11 +64,15 @@ const char index_html[] PROGMEM = R"rawliteral(
 void startWebServer() {
     if(!SPIFFS.begin(true)) Serial.println("Error SPIFFS");
 
+    WiFi.disconnect(true, true);
     WiFi.softAPdisconnect(true);
     delay(100);
     WiFi.mode(WIFI_OFF);
     delay(100);
     WiFi.mode(WIFI_AP); 
+    
+    IPAddress apIP(192, 168, 4, 1);
+    WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
     bool apStarted = WiFi.softAP(AppConfig::WEB_AP_SSID, AppConfig::WEB_AP_PASSWORD, 6);
     if (!apStarted) Serial.println("Error iniciando AP Web Dashboard");
     

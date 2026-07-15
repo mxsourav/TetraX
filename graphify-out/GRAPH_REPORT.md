@@ -1,7 +1,7 @@
 # Graph Report - C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main  (2026-07-15)
 
 ## Corpus Check
-- 181 files · ~5,579,906 words
+- 181 files · ~5,579,656 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
