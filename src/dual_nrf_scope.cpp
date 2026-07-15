@@ -1,16 +1,16 @@
 #include "dual_nrf_scope.h"
+#include "buzzer_manager.h"
 #include "oled_mirror.h"
 #include "input_manager.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
+// Single-NRF: scan full 125 channels sequentially, split display into low/high
 static const uint8_t LOW_START = 0;
 static const uint8_t LOW_COUNT = 62;   // 2400-2461 MHz
 static const uint8_t HIGH_START = 62;
@@ -27,13 +27,13 @@ static uint8_t lowPeak = 0;
 static uint8_t highPeak = 0;
 static uint8_t frameTick = 0;
 
-static uint8_t sampleRadio(RF24& radio, uint8_t channel) {
-    radio.setChannel(channel);
+static uint8_t sampleRadioLocal(uint8_t channel) {
+    activeRadio->setChannel(channel);
     delayMicroseconds(75);
 
     uint8_t hits = 0;
     for (uint8_t i = 0; i < SAMPLES_PER_POINT; i++) {
-        if (radio.testCarrier()) hits++;
+        if (activeRadio->testCarrier()) hits++;
     }
     return hits;
 }
@@ -50,18 +50,23 @@ static uint8_t pointY(uint8_t sample, uint8_t top, uint8_t bottom) {
 }
 
 static void scanStep() {
+    // Single radio: scan low band then high band sequentially
     for (uint8_t i = 0; i < POINTS_PER_FRAME; i++) {
-        uint8_t lowSample = sampleRadio(jam1, LOW_START + lowCursor);
+        uint8_t lowSample = sampleRadioLocal(LOW_START + lowCursor);
         lowTrace[lowCursor] = (lowTrace[lowCursor] * 2 + lowSample) / 3;
         if (lowTrace[lowCursor] > lowPeak) lowPeak = lowTrace[lowCursor];
         lowCursor++;
         if (lowCursor >= LOW_COUNT) lowCursor = 0;
 
-        uint8_t highSample = sampleRadio(jam2, HIGH_START + highCursor);
+        uint8_t highSample = sampleRadioLocal(HIGH_START + highCursor);
         highTrace[highCursor] = (highTrace[highCursor] * 2 + highSample) / 3;
         if (highTrace[highCursor] > highPeak) highPeak = highTrace[highCursor];
         highCursor++;
         if (highCursor >= HIGH_COUNT) highCursor = 0;
+
+        if (lowSample > 0 || highSample > 0) {
+            BuzzerManager::beepSync(1); // Geiger counter tick
+        }
     }
 
     if ((frames & 0x001F) == 0) {
@@ -69,6 +74,11 @@ static void scanStep() {
         if (highPeak > 0) highPeak--;
     }
     frames++;
+
+    // Periodic NRF health check
+    if ((frames & 0x003F) == 0) {
+        safeNrfRecovery(activeRadio, 0, false);
+    }
 }
 
 static void drawGrid(uint8_t top, uint8_t bottom) {
@@ -116,7 +126,7 @@ static void drawTrace(const uint8_t* trace,
 static void drawScope() {
     char status[10];
     snprintf(status, sizeof(status), "F%04u", frames);
-    UiTheme::drawHeader(u8g2, "DUAL NRF", status);
+    UiTheme::drawHeader(u8g2, "NRF SCOPE", status);
 
     drawTrace(lowTrace, LOW_COUNT, lowCursor, 18, 38, "L", lowPeak);
     drawTrace(highTrace, HIGH_COUNT, highCursor, 42, 62, "H", highPeak);
@@ -129,17 +139,11 @@ static void drawScope() {
 void dualNrfScopeEnter() {
     WiFi.mode(WIFI_OFF);
 
-    jam1.begin();
-    jam1.setAutoAck(false);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.startListening();
-
-    jam2.begin();
-    jam2.setAutoAck(false);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.startListening();
+    activeRadio->begin();
+    activeRadio->setAutoAck(false);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->startListening();
 
     memset(lowTrace, 0, sizeof(lowTrace));
     memset(highTrace, 0, sizeof(highTrace));
@@ -153,8 +157,7 @@ void dualNrfScopeEnter() {
 }
 
 void dualNrfScopeExit() {
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopListening();
     memset(lowTrace, 0, sizeof(lowTrace));
     memset(highTrace, 0, sizeof(highTrace));
 }

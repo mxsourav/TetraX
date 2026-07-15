@@ -106,7 +106,12 @@ void drawSplashFrame(U8G2& display, int progress, uint8_t frame) {
     drawCenteredText(display, 25, FIRMWARE_NAME);
 
     display.setFont(u8g2_font_6x12_tr);
-    drawCenteredText(display, 39, "PepeAngell");
+    const char* brand = "MX 100RAV";
+    int brandWidth = display.getStrWidth(brand);
+    int brandX = (128 - brandWidth) / 2;
+    display.drawRFrame(brandX - 6, 29, brandWidth + 12, 14, 2);
+    drawCenteredText(display, 39, brand);
+    
     display.setFont(u8g2_font_5x7_tr);
     drawCenteredText(display, 49, FIRMWARE_VERSION);
 

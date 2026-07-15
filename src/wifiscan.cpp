@@ -5,6 +5,7 @@
 #include <esp_wifi.h>
 #include "ui_theme.h"
 #include "wifiscan.h"
+#include "buzzer_manager.h"
 #include "app_config.h"
 #include "input_manager.h"
 
@@ -85,8 +86,8 @@ static void drawScanAnimation(uint32_t elapsedMs) {
     }
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    const char* dotPatterns[] = {"BUSCANDO", "BUSCANDO.",
-                                 "BUSCANDO..", "BUSCANDO..."};
+    const char* dotPatterns[] = {"SEARCHING", "SEARCHING.",
+                                 "SEARCHING..", "SEARCHING..."};
     const char* txt = dotPatterns[(elapsedMs / 250) % 4];
     int strW = u8g2.getStrWidth(txt);
     u8g2.drawStr((128 - strW) / 2, 62, txt);
@@ -175,6 +176,9 @@ static void runScan() {
     detailScrollY      = 0;
     marqueeOffset      = 0;
     lastMarqueeUpdate  = millis();
+    
+    // Scan finished double beep
+    BuzzerManager::beep(5, 2);
 }
 
 // =============================================================
@@ -203,7 +207,7 @@ static void attemptConnection(const String& ssid) {
     u8g2.clearBuffer();
     if (WiFi.status() == WL_CONNECTED) {
         target_ssid = ssid;   // auto-fijamos como target si se conectó
-        UiTheme::drawToast(u8g2, "CONECTADO", WiFi.localIP().toString().c_str());
+        UiTheme::drawToast(u8g2, "CONNECTED", WiFi.localIP().toString().c_str());
     } else {
         UiTheme::drawToast(u8g2, "TIMEOUT", "NO CONECTO");
     }
@@ -270,7 +274,7 @@ static void drawNetworkList() {
     drawListHeader();
 
     if (totalNetworks == 0) {
-        UiTheme::drawToast(u8g2, "SIN REDES", "AUX = RESCAN");
+        UiTheme::drawToast(u8g2, "NO NETWORKS", "AUX = RESCAN");
         return;
     }
 

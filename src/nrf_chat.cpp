@@ -2,13 +2,11 @@
 #include "oled_mirror.h"
 #include "input_manager.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 static const uint16_t CHAT_ACK_WAIT_MS = 65;
@@ -50,7 +48,6 @@ struct __attribute__((packed)) ChatPacket {
 static ChatScreen screen = CHAT_SETUP;
 static uint8_t roleSelection = 0;
 static uint8_t fieldSelection = 0;
-static uint8_t radioSelection = 1;
 static uint8_t channelSelection = 4;
 static uint8_t selectedMessage = 0;
 static bool radioReady = false;
@@ -67,13 +64,9 @@ static uint32_t lastDrawMs = 0;
 static char lastInbox[21] = "";
 static char lastOutbox[21] = "";
 
-static RF24& chatRadio() {
-    return radioSelection == 0 ? jam1 : jam2;
-}
-
-static RF24& idleRadio() {
-    return radioSelection == 0 ? jam2 : jam1;
-}
+// RX window timing for half-duplex
+static const uint16_t RX_WINDOW_MS = 50;
+static uint32_t lastRxWindowMs = 0;
 
 static uint8_t selectedChannel() {
     return CHAT_CHANNELS[channelSelection];
@@ -105,38 +98,33 @@ static void resetChatState() {
     lastRxMs = 0;
     lastTxMs = 0;
     lastDrawMs = 0;
+    lastRxWindowMs = 0;
     lastInbox[0] = 0;
     lastOutbox[0] = 0;
 }
 
 static void configureRadio() {
     WiFi.mode(WIFI_OFF);
-    jam1.stopConstCarrier();
-    jam2.stopConstCarrier();
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopConstCarrier();
+    activeRadio->stopListening();
 
-    RF24& radio = chatRadio();
-    RF24& idle = idleRadio();
-    idle.powerDown();
-
-    radioBeginOk = radio.begin();
-    radio.powerDown();
+    radioBeginOk = activeRadio->begin();
+    activeRadio->powerDown();
     delay(5);
-    radio.powerUp();
-    radio.setAddressWidth(5);
-    radio.setAutoAck(false);
-    radio.setRetries(0, 0);
-    radio.setPayloadSize(sizeof(ChatPacket));
-    radio.setChannel(selectedChannel());
-    radio.setDataRate(RF24_250KBPS);
-    radio.setPALevel(RF24_PA_HIGH);
-    radio.setCRCLength(RF24_CRC_16);
-    radio.openWritingPipe(peerAddress());
-    radio.openReadingPipe(1, ownAddress());
-    radio.flush_rx();
-    radio.flush_tx();
-    radio.startListening();
+    activeRadio->powerUp();
+    activeRadio->setAddressWidth(5);
+    activeRadio->setAutoAck(false);
+    activeRadio->setRetries(0, 0);
+    activeRadio->setPayloadSize(sizeof(ChatPacket));
+    activeRadio->setChannel(selectedChannel());
+    activeRadio->setDataRate(RF24_250KBPS);
+    activeRadio->setPALevel(RF24_PA_HIGH);
+    activeRadio->setCRCLength(RF24_CRC_16);
+    activeRadio->openWritingPipe(peerAddress());
+    activeRadio->openReadingPipe(1, ownAddress());
+    activeRadio->flush_rx();
+    activeRadio->flush_tx();
+    activeRadio->startListening();
     radioReady = true;
 }
 
@@ -153,16 +141,14 @@ static void drawSetup() {
     UiTheme::drawHeader(u8g2, "NRF CHAT", "SET");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    const char* role = roleSelection == 0 ? "MAESTRO" : "ESCLAVO";
-    char radio[8];
+    const char* role = roleSelection == 0 ? "MAESTRO" : "SLAVE";
     char channel[8];
-    snprintf(radio, sizeof(radio), "NRF%u", radioSelection + 1);
     snprintf(channel, sizeof(channel), "CH%u", selectedChannel());
 
-    const char* labels[] = {"ROL", "RADIO", "CANAL"};
-    const char* values[] = {role, radio, channel};
+    const char* labels[] = {"ROL", "CANAL"};
+    const char* values[] = {role, channel};
 
-    for (uint8_t i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < 2; i++) {
         int y = 25 + i * 12;
         int x = 8;
         int w = 112;
@@ -176,7 +162,7 @@ static void drawSetup() {
     }
 
     u8g2.drawHLine(10, 59, 108);
-    uint8_t markerX = 22 + fieldSelection * 42;
+    uint8_t markerX = 32 + fieldSelection * 52;
     u8g2.drawBox(markerX, 57, 8, 4);
 }
 
@@ -194,9 +180,8 @@ static void drawMessageRow(uint8_t msgIndex, uint8_t row, bool selected) {
 
 static void drawChat() {
     char status[12];
-    snprintf(status, sizeof(status), radioBeginOk ? "%c R%u" : "RF ERR",
-             roleSelection == 0 ? 'M' : 'S',
-             radioSelection + 1);
+    snprintf(status, sizeof(status), radioBeginOk ? "%c" : "RF ERR",
+             roleSelection == 0 ? 'M' : 'S');
     UiTheme::drawHeader(u8g2, "NRF CHAT", status);
 
     int first = selectedMessage - 2;
@@ -232,17 +217,17 @@ static void drawChat() {
     }
 }
 
+// Half-duplex TX: stop listening, transmit, then resume listening
 static bool waitForAck(uint16_t seq) {
-    RF24& radio = chatRadio();
     uint32_t start = millis();
     while (millis() - start < CHAT_ACK_WAIT_MS) {
-        if (!radio.available()) {
+        if (!activeRadio->available()) {
             delayMicroseconds(150);
             continue;
         }
 
         ChatPacket pkt;
-        radio.read(&pkt, sizeof(pkt));
+        activeRadio->read(&pkt, sizeof(pkt));
         if (pkt.magic == 0xC7 && pkt.type == 2 && pkt.seq == seq) {
             return true;
         }
@@ -260,7 +245,6 @@ static bool waitForAck(uint16_t seq) {
 }
 
 static void sendAck(uint16_t seq) {
-    RF24& radio = chatRadio();
     ChatPacket ack;
     memset(&ack, 0, sizeof(ack));
     ack.magic = 0xC7;
@@ -268,16 +252,16 @@ static void sendAck(uint16_t seq) {
     ack.seq = seq;
     ack.fromRole = roleSelection;
 
-    radio.stopListening();
-    radio.flush_tx();
-    radio.openWritingPipe(peerAddress());
-    radio.write(&ack, sizeof(ack));
-    radio.openReadingPipe(1, ownAddress());
-    radio.startListening();
+    // Half-duplex: switch to TX, send ACK, switch back to RX
+    activeRadio->stopListening();
+    activeRadio->flush_tx();
+    activeRadio->openWritingPipe(peerAddress());
+    activeRadio->write(&ack, sizeof(ack));
+    activeRadio->openReadingPipe(1, ownAddress());
+    activeRadio->startListening();
 }
 
 static void sendSelectedMessage() {
-    RF24& radio = chatRadio();
     ChatPacket pkt;
     memset(&pkt, 0, sizeof(pkt));
     pkt.magic = 0xC7;
@@ -293,13 +277,14 @@ static void sendSelectedMessage() {
     lastTxMs = millis();
 
     for (uint8_t attempt = 0; attempt < 3; attempt++) {
-        radio.stopListening();
-        radio.flush_tx();
-        if (attempt == 0) radio.flush_rx();
-        radio.openWritingPipe(peerAddress());
-        radio.write(&pkt, sizeof(pkt));
-        radio.openReadingPipe(1, ownAddress());
-        radio.startListening();
+        // Half-duplex: stop listening for TX, then resume
+        activeRadio->stopListening();
+        activeRadio->flush_tx();
+        if (attempt == 0) activeRadio->flush_rx();
+        activeRadio->openWritingPipe(peerAddress());
+        activeRadio->write(&pkt, sizeof(pkt));
+        activeRadio->openReadingPipe(1, ownAddress());
+        activeRadio->startListening();
 
         if (waitForAck(pkt.seq)) {
             lastAckOk = true;
@@ -309,12 +294,12 @@ static void sendSelectedMessage() {
     }
 }
 
+// Timed RX window: service incoming packets for a bounded duration
 static void serviceIncoming() {
-    RF24& radio = chatRadio();
     uint32_t start = millis();
-    while (radio.available() && millis() - start < 4) {
+    while (activeRadio->available() && millis() - start < 4) {
         ChatPacket pkt;
-        radio.read(&pkt, sizeof(pkt));
+        activeRadio->read(&pkt, sizeof(pkt));
         if (pkt.magic != 0xC7) continue;
 
         if (pkt.type == 1) {
@@ -336,7 +321,6 @@ void nrfChatEnter() {
     screen = CHAT_SETUP;
     roleSelection = 0;
     fieldSelection = 0;
-    radioSelection = 1;
     channelSelection = 4;
     radioReady = false;
     radioBeginOk = false;
@@ -345,10 +329,8 @@ void nrfChatEnter() {
 }
 
 void nrfChatExit() {
-    jam1.stopListening();
-    jam2.stopListening();
-    jam1.powerDown();
-    jam2.powerDown();
+    activeRadio->stopListening();
+    activeRadio->powerDown();
     radioReady = false;
     screen = CHAT_SETUP;
     resetChatState();
@@ -359,8 +341,6 @@ void nrfChatLoop() {
         if (Input.repeating(BTN_ID_UP)) {
             if (fieldSelection == 0) {
                 roleSelection = roleSelection == 0 ? 1 : 0;
-            } else if (fieldSelection == 1) {
-                radioSelection = radioSelection == 0 ? 1 : 0;
             } else {
                 channelSelection = (channelSelection + 1) % (sizeof(CHAT_CHANNELS) / sizeof(CHAT_CHANNELS[0]));
             }
@@ -368,15 +348,13 @@ void nrfChatLoop() {
         if (Input.repeating(BTN_ID_DOWN)) {
             if (fieldSelection == 0) {
                 roleSelection = roleSelection == 0 ? 1 : 0;
-            } else if (fieldSelection == 1) {
-                radioSelection = radioSelection == 0 ? 1 : 0;
             } else {
                 uint8_t count = sizeof(CHAT_CHANNELS) / sizeof(CHAT_CHANNELS[0]);
                 channelSelection = (channelSelection + count - 1) % count;
             }
         }
         if (Input.pressed(BTN_ID_AUX)) {
-            fieldSelection = (fieldSelection + 1) % 3;
+            fieldSelection = (fieldSelection + 1) % 2;
             Input.consume(BTN_ID_AUX);
         }
         if (Input.pressed(BTN_ID_OK)) {
@@ -393,6 +371,9 @@ void nrfChatLoop() {
     }
 
     if (!radioReady) configureRadio();
+
+    // NRF recovery check
+    safeNrfRecovery(activeRadio, 0, false);
 
     serviceIncoming();
 

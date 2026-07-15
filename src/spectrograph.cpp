@@ -3,11 +3,9 @@
 #include "ui_theme.h"
 #include "app_config.h"
 #include "input_manager.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 #define ALERT_DURATION 1800
@@ -172,15 +170,10 @@ static bool updateAttackDetector(long totalEnergy, uint8_t activeChannels, uint8
 // =============================================================
 
 void spectrographSetup() {
-    jam1.begin();
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.startListening();
-
-    jam2.begin();
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.startListening();
+    activeRadio->begin();
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->startListening();
 
     memset(peak_heights, 0, sizeof(peak_heights));
     alertStartTime    = 0;
@@ -195,8 +188,7 @@ void spectrographSetup() {
 void spectrographEnter() { spectrographSetup(); }
 
 void spectrographExit() {
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopListening();
     memset(peak_heights, 0, sizeof(peak_heights));
     alertStartTime    = 0;
     calibrationFrames = 0;
@@ -217,33 +209,24 @@ void spectrographLoop() {
     drawFloor();
     drawBandMarkers();
 
-    // Sample completo del espectro (124 canales con 2 radios)
-    for (int i = 0; i < 62; i++) {
-        int ch1 = i;
-        int ch2 = i + 63;
-
-        jam1.setChannel(ch1);
-        jam2.setChannel(ch2);
+    // Sample completo del espectro (125 canales with single radio sequential scan)
+    for (int ch = 0; ch < 125; ch++) {
+        activeRadio->setChannel(ch);
         delayMicroseconds(100);
 
-        int s1 = 0;
-        int s2 = 0;
-        for (int s = 0; s < 40; s++) {
-            if (jam1.testCarrier()) s1++;
-            if (jam2.testCarrier()) s2++;
+        int s = 0;
+        for (int j = 0; j < 40; j++) {
+            if (activeRadio->testCarrier()) s++;
         }
 
-        totalEnergy += s1;
-        totalEnergy += s2;
+        totalEnergy += s;
+        if (s >= ACTIVE_SAMPLE_LEVEL) activeChannels++;
+        if (s >= STRONG_SAMPLE_LEVEL) strongChannels++;
 
-        if (s1 >= ACTIVE_SAMPLE_LEVEL) activeChannels++;
-        if (s2 >= ACTIVE_SAMPLE_LEVEL) activeChannels++;
-        if (s1 >= STRONG_SAMPLE_LEVEL) strongChannels++;
-        if (s2 >= STRONG_SAMPLE_LEVEL) strongChannels++;
-
-        drawSpectrumBar(ch1, s1);
-        drawSpectrumBar(ch2, s2);
+        drawSpectrumBar(ch, s);
     }
+    // Periodic NRF health check
+    safeNrfRecovery(activeRadio, 0, false);
 
     // Re-dibujar header con energía real (ya conocemos totalEnergy)
     drawHeader(totalEnergy);

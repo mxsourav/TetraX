@@ -1,4 +1,5 @@
 #include "wifi_channel_scan.h"
+#include "buzzer_manager.h"
 #include "oled_mirror.h"
 #include "ui_theme.h"
 #include "input_manager.h"
@@ -135,6 +136,9 @@ static void buildScanResults(int result) {
     }
     selectedApInChannel = 0;
     scanState = CH_SCAN_CHANNELS;
+    
+    // Scan finished double beep
+    BuzzerManager::beep(5, 2);
 }
 
 static int apsInChannel(int channel) {
@@ -161,7 +165,7 @@ static void drawScanning() {
     snprintf(status, sizeof(status), "%02ds", (int)((millis() - scanStartMs) / 1000));
     UiTheme::drawHeader(u8g2, "CHANNEL SCAN", status);
     UiTheme::drawSpinner(u8g2, 64, 34, (millis() / 90) & 0xFF);
-    UiTheme::drawCenteredText(u8g2, 56, "ESCANEANDO CANALES");
+    UiTheme::drawCenteredText(u8g2, 56, "SCANNING CHANNELS");
     u8g2.sendBuffer(); oledMirrorSync();
 }
 
@@ -197,7 +201,7 @@ static void drawChannelList() {
     if (apCount == 0) {
         char msg[18];
         snprintf(msg, sizeof(msg), "RAW %02d OK=SCAN", lastRawScanCount);
-        UiTheme::drawToast(u8g2, "SIN REDES", msg);
+        UiTheme::drawToast(u8g2, "NO NETWORKS", msg);
         u8g2.sendBuffer(); oledMirrorSync();
         return;
     }

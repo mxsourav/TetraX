@@ -6,5 +6,6 @@
 
 void jammerSetup();
 void jammerLoop();
+void jammerExit();
 
 #endif

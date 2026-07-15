@@ -6,7 +6,7 @@
 
 namespace UiTheme {
 
-static const char* const FIRMWARE_NAME = "BWifiKill";
+static const char* const FIRMWARE_NAME = "TetraX";
 static const char* const FIRMWARE_VERSION = "v4.0";
 
 void drawHeader(U8G2& display, const char* title, const char* status = nullptr);

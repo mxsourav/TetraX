@@ -94,71 +94,70 @@ void drawSkullIcon(int x, int y) {
 // --- ICONOS ANIMADOS DE CATEGORIA ---
 
 // WiFi: ondas concentricas que se propagan en cascada (4 fases)
-void drawWifiCategoryIcon(int x, int y, uint8_t frame) {
+void drawWifiCategoryIcon(int x, int y, uint8_t frame, float scale) {
     uint8_t step = (frame / 6) % 4;
-    u8g2.drawDisc(x+16, y+22, 2);
-    if (step >= 1) u8g2.drawCircle(x+16, y+22, 6,  U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
-    if (step >= 2) u8g2.drawCircle(x+16, y+22, 10, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
-    if (step >= 3) u8g2.drawCircle(x+16, y+22, 14, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+    u8g2.drawDisc(x+16*scale, y+22*scale, max(1.0f, 2*scale));
+    if (step >= 1) u8g2.drawCircle(x+16*scale, y+22*scale, 6*scale,  U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+    if (step >= 2) u8g2.drawCircle(x+16*scale, y+22*scale, 10*scale, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+    if (step >= 3) u8g2.drawCircle(x+16*scale, y+22*scale, 14*scale, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
 }
 
 // RF: barrido radar con estela de la posicion anterior
-void drawRfCategoryIcon(int x, int y, uint8_t frame) {
+void drawRfCategoryIcon(int x, int y, uint8_t frame, float scale) {
     static const int8_t sx[] = {0, 8, 12, 7, 0, -7, -12, -8};
     static const int8_t sy[] = {-12, -9, 0, 8, 12, 8, 0, -9};
     uint8_t pos  = (frame / 4) & 7;
     uint8_t tail = (pos - 1) & 7;
-
-    u8g2.drawCircle(x+16, y+16, 14);
-    u8g2.drawDisc(x+16, y+16, 2);
-    u8g2.drawPixel(x+16+sx[tail]/2, y+16+sy[tail]/2);
-    u8g2.drawLine(x+16, y+16, x+16+sx[pos], y+16+sy[pos]);
-    u8g2.drawDisc(x+16+sx[pos], y+16+sy[pos], 2);
+    u8g2.drawCircle(x+16*scale, y+16*scale, 14*scale);
+    u8g2.drawDisc(x+16*scale, y+16*scale, max(1.0f, 2*scale));
+    u8g2.drawPixel(x+16*scale+(sx[tail]/2)*scale, y+16*scale+(sy[tail]/2)*scale);
+    u8g2.drawLine(x+16*scale, y+16*scale, x+16*scale+sx[pos]*scale, y+16*scale+sy[pos]*scale);
+    u8g2.drawDisc(x+16*scale+sx[pos]*scale, y+16*scale+sy[pos]*scale, max(1.0f, 2*scale));
 }
 
 // Bluetooth: simbolo BT estatico + ondas de emparejamiento saliendo a la derecha
-void drawBluetoothCategoryIcon(int x, int y, uint8_t frame) {
-    drawBluetoothIcon(x, y);
+void drawBluetoothCategoryIcon(int x, int y, uint8_t frame, float scale) {
+    u8g2.drawVLine(x+16*scale, y+6*scale, 20*scale);
+    u8g2.drawLine(x+16*scale, y+26*scale, x+24*scale, y+18*scale);
+    u8g2.drawLine(x+24*scale, y+18*scale, x+8*scale, y+6*scale);
+    u8g2.drawLine(x+16*scale, y+6*scale, x+24*scale, y+14*scale);
+    u8g2.drawLine(x+24*scale, y+14*scale, x+8*scale, y+26*scale);
     uint8_t step = (frame / 8) % 3;
-    if (step >= 1) u8g2.drawCircle(x+26, y+16, 2, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
-    if (step >= 2) u8g2.drawCircle(x+26, y+16, 4, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+    if (step >= 1) u8g2.drawCircle(x+26*scale, y+16*scale, 2*scale, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+    if (step >= 2) u8g2.drawCircle(x+26*scale, y+16*scale, 4*scale, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
 }
 
 // Warning / ILEGAL: simbolo de prohibido (circulo tachado) con onda de alerta expansiva
-void drawWarningCategoryIcon(int x, int y, uint8_t frame) {
-    // simbolo de prohibido base (siempre visible)
-    u8g2.drawCircle(x+16, y+16, 11);
-    u8g2.drawLine(x+8, y+24, x+24, y+8);
-
-    // onda de alerta expansiva: aparece, crece y descansa
+void drawWarningCategoryIcon(int x, int y, uint8_t frame, float scale) {
+    u8g2.drawCircle(x+16*scale, y+16*scale, 11*scale);
+    u8g2.drawLine(x+8*scale, y+24*scale, x+24*scale, y+8*scale);
     uint8_t pulse = (frame / 5) % 4;
-    if (pulse == 1) u8g2.drawCircle(x+16, y+16, 13);
-    if (pulse == 2) u8g2.drawCircle(x+16, y+16, 15);
+    if (pulse == 1) u8g2.drawCircle(x+16*scale, y+16*scale, 13*scale);
+    if (pulse == 2) u8g2.drawCircle(x+16*scale, y+16*scale, 15*scale);
 }
 
 // System: engranaje con particula recorriendo el perimetro
-void drawSystemCategoryIcon(int x, int y, uint8_t frame) {
+void drawSystemCategoryIcon(int x, int y, uint8_t frame, float scale) {
     static const int8_t ox[] = {11, 8, 0, -8, -11, -8, 0, 8};
     static const int8_t oy[] = {0, 8, 11, 8, 0, -8, -11, -8};
     uint8_t pos = (frame / 6) & 7;
-
-    u8g2.drawCircle(x+16, y+16, 11);
-    u8g2.drawDisc(x+16, y+16, 4);
-    u8g2.drawHLine(x+2, y+15, 7);
-    u8g2.drawHLine(x+23, y+15, 7);
-    u8g2.drawVLine(x+15, y+2, 7);
-    u8g2.drawVLine(x+15, y+23, 7);
-    u8g2.drawDisc(x+16+ox[pos], y+16+oy[pos], 1);
+    u8g2.drawCircle(x+16*scale, y+16*scale, 11*scale);
+    u8g2.drawDisc(x+16*scale, y+16*scale, max(1.0f, 4*scale));
+    u8g2.drawHLine(x+2*scale, y+15*scale, 7*scale);
+    u8g2.drawHLine(x+23*scale, y+15*scale, 7*scale);
+    u8g2.drawVLine(x+15*scale, y+2*scale, 7*scale);
+    u8g2.drawVLine(x+15*scale, y+23*scale, 7*scale);
+    u8g2.drawDisc(x+16*scale+ox[pos]*scale, y+16*scale+oy[pos]*scale, max(1.0f, 1*scale));
 }
 
-void drawGamesCategoryIcon(int x, int y, uint8_t frame) {
+void drawGamesCategoryIcon(int x, int y, uint8_t frame, float scale) {
     uint8_t blink = (frame / 8) & 1;
-    u8g2.drawRFrame(x+3, y+11, 26, 14, 4);
-    u8g2.drawDisc(x+10, y+18, 2);
-    u8g2.drawHLine(x+7, y+18, 6);
-    u8g2.drawVLine(x+10, y+15, 6);
-    u8g2.drawDisc(x+21, y+16, 1 + blink);
-    u8g2.drawDisc(x+25, y+20, 1);
+    u8g2.drawRFrame(x+3*scale, y+11*scale, 26*scale, 14*scale, max(1.0f, 4*scale));
+    u8g2.drawDisc(x+10*scale, y+18*scale, max(1.0f, 2*scale));
+    u8g2.drawHLine(x+7*scale, y+18*scale, 6*scale);
+    u8g2.drawVLine(x+10*scale, y+15*scale, 6*scale);
+    u8g2.drawDisc(x+21*scale, y+16*scale, max(1.0f, (1 + blink)*scale));
+    u8g2.drawDisc(x+25*scale, y+20*scale, max(1.0f, 1*scale));
 }
 
 // --- NUEVOS DISEÑOS EXCLUSIVOS ---
@@ -181,13 +180,13 @@ void drawIPScannerIcon(int x, int y) { // IP SCANNER: Lupa con "red"
     u8g2.drawLine(x+18, y+18, x+26, y+26);
 }
 
-void drawIRCategoryIcon(int x, int y, uint8_t frame) {
-    u8g2.drawBox(x+8, y+14, 16, 12);
-    u8g2.drawDisc(x+16, y+14, 4);
+void drawIRCategoryIcon(int x, int y, uint8_t frame, float scale) {
+    u8g2.drawBox(x+8*scale, y+14*scale, 16*scale, 12*scale);
+    u8g2.drawDisc(x+16*scale, y+14*scale, max(1.0f, 4*scale));
     uint8_t wave = (frame / 4) % 3;
-    if (wave >= 0) u8g2.drawCircle(x+16, y+14, 8, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
-    if (wave >= 1) u8g2.drawCircle(x+16, y+14, 12, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
-    if (wave >= 2) u8g2.drawCircle(x+16, y+14, 16, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
+    if (wave >= 0) u8g2.drawCircle(x+16*scale, y+14*scale, 8*scale, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
+    if (wave >= 1) u8g2.drawCircle(x+16*scale, y+14*scale, 12*scale, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
+    if (wave >= 2) u8g2.drawCircle(x+16*scale, y+14*scale, 16*scale, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
 }
 
 void drawIRRemoteAppIcon(int x, int y) {
@@ -303,29 +302,29 @@ static void drawMenuIcon(int index, int x, int y) {
     }
 }
 
-static void drawCategoryIcon(uint8_t icon, int x, int y) {
-    uint8_t frame = (millis() / 80) & 0xFF;
+static void drawCategoryIcon(uint8_t icon, int x, int y, bool animate = true, float scale = 1.0f) {
+    uint8_t frame = animate ? ((millis() / 80) & 0xFF) : 0;
     switch (icon) {
         case MENU_ICON_WIFI:
-            drawWifiCategoryIcon(x, y, frame);
+            drawWifiCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_RF:
-            drawRfCategoryIcon(x, y, frame);
+            drawRfCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_BLUETOOTH:
-            drawBluetoothCategoryIcon(x, y, frame);
+            drawBluetoothCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_WARNING:
-            drawWarningCategoryIcon(x, y, frame);
+            drawWarningCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_GAMES:
-            drawGamesCategoryIcon(x, y, frame);
+            drawGamesCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_IR:
-            drawIRCategoryIcon(x, y, frame);
+            drawIRCategoryIcon(x, y, frame, scale);
             break;
         case MENU_ICON_SYSTEM:
-            drawSystemCategoryIcon(x, y, frame);
+            drawSystemCategoryIcon(x, y, frame, scale);
             break;
         default:
             drawInfo(x, y);
@@ -333,28 +332,159 @@ static void drawCategoryIcon(uint8_t icon, int x, int y) {
     }
 }
 
+static float lerp(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
+static void getCardProps(float dt, int& x, int& y, int& w, int& h, float& scale) {
+    float adt = abs(dt);
+    float t;
+    float cx, fW, fH, fY;
+    if (adt <= 1.0f) {
+        t = adt;
+        cx = lerp(64, 96, t);
+        fW = lerp(36, 24, t);
+        fH = lerp(48, 38, t);
+        fY = lerp(15, 20, t);
+        scale = lerp(1.0f, 0.75f, t);
+    } else if (adt <= 2.0f) {
+        t = adt - 1.0f;
+        cx = lerp(96, 119, t);
+        fW = lerp(24, 18, t);
+        fH = lerp(38, 28, t);
+        fY = lerp(20, 25, t);
+        scale = lerp(0.75f, 0.5f, t);
+    } else if (adt <= 3.0f) {
+        t = adt - 2.0f;
+        cx = lerp(119, 138, t);
+        fW = lerp(18, 0, t);
+        fH = lerp(28, 0, t);
+        fY = lerp(25, 32, t);
+        scale = lerp(0.5f, 0.0f, t);
+    } else {
+        w = 0; h = 0; return;
+    }
+    
+    if (dt < 0) {
+        cx = 64 - (cx - 64);
+    }
+    
+    w = (int)fW;
+    h = (int)fH;
+    x = (int)(cx - w / 2.0f);
+    y = (int)fY;
+}
+
 static void drawCategoryScreen() {
-    uint8_t total = menuCategoryCount();
-    const MenuCategory& cat = menuCategoryAt(category_index);
-
     u8g2.clearBuffer();
-    char status[8];
-    snprintf(status, sizeof(status), "%02d/%02d", category_index + 1, total);
-    UiTheme::drawHeader(u8g2, "BWifiKill v4.0", status);
-
-    drawCategoryIcon(cat.icon, 48, 18);
-    drawCategoryRail(total, category_index);
-
+    
+    int total = menuCategoryCount();
+    const MenuCategory& cat = menuCategoryAt(category_index);
+    
+    // Draw category name at top center inside a bubble
     const char* label = cat.name;
-    u8g2.setFont(u8g2_font_6x10_tr);
+    u8g2.setFont(u8g2_font_helvB08_tr);
     int labelWidth = u8g2.getStrWidth(label);
     int labelX = (128 - labelWidth) / 2;
-    u8g2.drawBox(max(2, labelX - 4), 53, min(124, labelWidth + 8), 10);
-    u8g2.setDrawColor(0);
-    u8g2.drawStr(labelX, 61, label);
+    
     u8g2.setDrawColor(1);
+    u8g2.drawRBox(labelX - 4, 0, labelWidth + 8, 13, 3);
+    u8g2.setDrawColor(0);
+    u8g2.drawStr(labelX, 10, label);
+    u8g2.setDrawColor(1);
+    
+    // Animation Logic
+    static float anim_pos = -1;
+    if (anim_pos < 0) anim_pos = category_index; // init
+    
+    static uint32_t last_time = millis();
+    uint32_t now = millis();
+    float dt_sec = (now - last_time) / 1000.0f;
+    last_time = now;
+    if (dt_sec > 0.1f) dt_sec = 0.1f; // Cap dt at 100ms
+    
+    float diff = category_index - anim_pos;
+    if (diff > total / 2.0f) diff -= total;
+    if (diff < -total / 2.0f) diff += total;
+    
+    if (abs(diff) > 0.01f) {
+        float speed = 12.0f; // 12 cards per second = ~83ms per transition
+        float step = speed * dt_sec;
+        if (step > abs(diff)) step = abs(diff);
+        anim_pos += (diff > 0) ? step : -step;
+    } else {
+        anim_pos = category_index;
+    }
+    
+    if (anim_pos < 0) anim_pos += total;
+    if (anim_pos >= total) anim_pos -= total;
+    
+    struct CardAnim {
+        int idx;
+        float dt;
+        float adt;
+    };
+    CardAnim cards[10];
+    int cCount = 0;
+    
+    for (int i = 0; i < total; i++) {
+        float dt = i - anim_pos;
+        while (dt > total / 2.0f) dt -= total;
+        while (dt < -total / 2.0f) dt += total;
+        
+        if (abs(dt) < 3.0f) {
+            cards[cCount].idx = i;
+            cards[cCount].dt = dt;
+            cards[cCount].adt = abs(dt);
+            cCount++;
+        }
+    }
+    
+    // Sort descending by adt so center (adt=0) draws last and is on top
+    for (int i = 0; i < cCount - 1; i++) {
+        for (int j = 0; j < cCount - i - 1; j++) {
+            if (cards[j].adt < cards[j+1].adt) {
+                CardAnim temp = cards[j];
+                cards[j] = cards[j+1];
+                cards[j+1] = temp;
+            }
+        }
+    }
+    
+    int bounceOffset = (millis() / 200) % 2;
+    
+    for (int i = 0; i < cCount; i++) {
+        int x, y, w, h;
+        float scale;
+        getCardProps(cards[i].dt, x, y, w, h, scale);
+        
+        if (w <= 0 || h <= 0) continue;
+        
+        const MenuCategory& c = menuCategoryAt(cards[i].idx);
+        bool isCenter = (cards[i].adt < 0.1f);
+        if (isCenter) y += bounceOffset;
+        
+        // Mask out the background for this card so it overlays nicely
+        u8g2.setDrawColor(0);
+        u8g2.drawRBox(x, y, w, h, isCenter ? 3 : 2);
+        
+        u8g2.setDrawColor(1);
+        if (isCenter) {
+            u8g2.drawRFrame(x, y, w, h, 3);
+            u8g2.drawRFrame(x+1, y+1, w-2, h-2, 2);
+            int ax = x + w / 2;
+            int ay = y + h - 4;
+            u8g2.drawTriangle(ax - 3, ay - 2, ax + 3, ay - 2, ax, ay + 2);
+            drawCategoryIcon(c.icon, x + 2, y + 4, true, 1.0f);
+        } else {
+            u8g2.drawRFrame(x, y, w, h, 2);
+            int isz = (int)(32 * scale);
+            int ix = x + (w - isz) / 2;
+            int iy = y + (h - isz) / 2;
+            drawCategoryIcon(c.icon, ix, iy, false, scale);
+        }
+    }
 
-    u8g2.drawRFrame(0, 0, 128, 64, 5);
     u8g2.sendBuffer(); oledMirrorSync();
 }
 

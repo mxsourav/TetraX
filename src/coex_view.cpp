@@ -2,13 +2,11 @@
 #include "oled_mirror.h"
 #include "input_manager.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 static const uint16_t FIRST_MHZ = 2400;
@@ -27,13 +25,13 @@ static uint8_t xForMhz(uint16_t mhz) {
     return 2 + ((uint32_t)(mhz - FIRST_MHZ) * 124) / (LAST_MHZ - FIRST_MHZ);
 }
 
-static uint8_t sampleRadio(RF24& radio, uint8_t channel) {
-    radio.setChannel(channel);
+static uint8_t sampleRadioLocal(uint8_t channel) {
+    activeRadio->setChannel(channel);
     delayMicroseconds(90);
 
     uint8_t hits = 0;
     for (uint8_t i = 0; i < SAMPLES_PER_BIN; i++) {
-        if (radio.testCarrier()) hits++;
+        if (activeRadio->testCarrier()) hits++;
     }
     return hits;
 }
@@ -56,26 +54,18 @@ static void scanProfile() {
     hotLevel = 0;
     hotMhz = FIRST_MHZ;
 
-    for (uint8_t i = 0; i < 42; i++) {
-        uint8_t s1 = sampleRadio(jam1, i);
-        profile[i] = (profile[i] * 3 + s1) / 4;
-        if (profile[i] >= hotLevel) {
-            hotLevel = profile[i];
-            hotMhz = FIRST_MHZ + i;
-        }
-
-        uint8_t ch2 = i + 42;
-        if (ch2 < RF_BINS) {
-            uint8_t s2 = sampleRadio(jam2, ch2);
-            profile[ch2] = (profile[ch2] * 3 + s2) / 4;
-            if (profile[ch2] >= hotLevel) {
-                hotLevel = profile[ch2];
-                hotMhz = FIRST_MHZ + ch2;
-            }
+    // Sequential scan with single radio
+    for (uint8_t ch = 0; ch < RF_BINS; ch++) {
+        uint8_t s = sampleRadioLocal(ch);
+        profile[ch] = (profile[ch] * 3 + s) / 4;
+        if (profile[ch] >= hotLevel) {
+            hotLevel = profile[ch];
+            hotMhz = FIRST_MHZ + ch;
         }
     }
 
     sweeps++;
+    if ((sweeps & 0x000F) == 0) safeNrfRecovery(activeRadio, 0, false);
 }
 
 static void drawWifiBand(uint8_t channel) {
@@ -164,17 +154,11 @@ static void drawCoexView() {
 void coexViewEnter() {
     WiFi.mode(WIFI_OFF);
 
-    jam1.begin();
-    jam1.setAutoAck(false);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.startListening();
-
-    jam2.begin();
-    jam2.setAutoAck(false);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.startListening();
+    activeRadio->begin();
+    activeRadio->setAutoAck(false);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->startListening();
 
     memset(profile, 0, sizeof(profile));
     sweeps = 0;
@@ -185,8 +169,7 @@ void coexViewEnter() {
 }
 
 void coexViewExit() {
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopListening();
     memset(profile, 0, sizeof(profile));
 }
 

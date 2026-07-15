@@ -51,7 +51,7 @@ enum ButtonEvent : uint8_t {
 class InputManager {
 public:
     void begin();
-    void update();
+    void update(bool fromHijack = false);
 
     // Consultas
     ButtonEvent event(ButtonId id) const   { return events[id]; }
@@ -69,6 +69,7 @@ public:
     void consume(ButtonId id);
     void resetAll();
     void injectVirtualState(ButtonId id, bool pressed);
+    void setIdleMode(bool active) { _idleMode = active; }
 
     // Global termination logic
     bool cancelRequested();
@@ -91,6 +92,7 @@ private:
     bool backIsModifier = false;
     bool comboUsed = false;
     bool cancelFlag = false;
+    bool _idleMode = false;
 };
 
 extern InputManager Input;

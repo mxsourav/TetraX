@@ -1,4 +1,4 @@
-\# BWifiKill V4 Web UI Design System
+\# TetraX V4 Web UI Design System
 
 
 

@@ -2,18 +2,16 @@
 #include "oled_mirror.h"
 #include "bt_remote.h"
 #include "ui_theme.h"
+#include "nrf_helper.h"
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
-#include <RF24.h>
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <math.h>
 #include <string>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 // ============================================================================
@@ -61,8 +59,7 @@ static uint32_t peakLastUpdate[BT_CHANNELS];
 static uint8_t  flashFrames[BT_CHANNELS];
 static uint8_t  channelToXLUT[BT_CHANNELS];
 
-static bool rf1Ok = false;
-static bool rf2Ok = false;
+static bool rfOk = false;
 
 static uint16_t      energyHighWater = 100;
 static uint32_t      lastEnergyHwDecay = 0;
@@ -474,9 +471,7 @@ static void drawSpectrumHeader(long totalEnergy) {
 
     // Avisos de radios desconectadas (sustituyen al energyLine)
     const char* leftText;
-    if (!rf1Ok && !rf2Ok)      leftText = "RF OFF";
-    else if (!rf1Ok)           leftText = "RF1 OFF";
-    else if (!rf2Ok)           leftText = "RF2 OFF";
+    if (!rfOk)                 leftText = "RF OFF";
     else                       leftText = energyLine;
     u8g2.drawStr(2, GRAPH_TOP - 1, leftText);
 
@@ -549,19 +544,12 @@ void btSpectrumEnter() {
     bleScanActive = false;
     resetBleStats();
 
-    rf1Ok = jam1.begin() && jam1.isChipConnected();
-    if (rf1Ok) {
-        jam1.setAutoAck(false);
-        jam1.setDataRate(RF24_2MBPS);
-        jam1.setPALevel(RF24_PA_MAX);
-        jam1.startListening();
-    }
-    rf2Ok = jam2.begin() && jam2.isChipConnected();
-    if (rf2Ok) {
-        jam2.setAutoAck(false);
-        jam2.setDataRate(RF24_2MBPS);
-        jam2.setPALevel(RF24_PA_MAX);
-        jam2.startListening();
+    rfOk = activeRadio->begin() && activeRadio->isChipConnected();
+    if (rfOk) {
+        activeRadio->setAutoAck(false);
+        activeRadio->setDataRate(RF24_2MBPS);
+        activeRadio->setPALevel(RF24_PA_MAX);
+        activeRadio->startListening();
     }
 
     buildChannelLut();
@@ -589,10 +577,8 @@ void btSpectrumExit() {
         BLEDevice::deinit(false);
     }
 
-    if (rf1Ok) jam1.stopListening();
-    if (rf2Ok) jam2.stopListening();
-    rf1Ok = false;
-    rf2Ok = false;
+    if (rfOk) activeRadio->stopListening();
+    rfOk = false;
 
     memset(rawSamples,      0, sizeof(rawSamples));
     memset(displayedSample, 0, sizeof(displayedSample));
@@ -607,17 +593,15 @@ void btSpectrumLoop() {
     updateBlePacketStats();
     purgeUniqueAddrs();
 
-    // 1. Muestreo RF
-    for (uint8_t slot = 0; slot < 40; slot++) {
-        uint8_t ch1 = BT_FIRST_CH + slot;
-        uint8_t idx1 = slot;
-        rawSamples[idx1] = rf1Ok ? sampleRadio(jam1, ch1) : 0;
-
-        uint8_t ch2 = BT_FIRST_CH + 40 + slot;
-        if (ch2 <= BT_LAST_CH) {
-            uint8_t idx2 = 40 + slot;
-            rawSamples[idx2] = rf2Ok ? sampleRadio(jam2, ch2) : 0;
+    // 1. Muestreo RF - sequential scan across full band with single radio
+    if (rfOk) {
+        for (uint8_t i = 0; i < BT_CHANNELS; i++) {
+            rawSamples[i] = sampleRadio(*activeRadio, BT_FIRST_CH + i);
         }
+        // Periodic NRF health check
+        safeNrfRecovery(activeRadio, 0, false);
+    } else {
+        memset(rawSamples, 0, sizeof(rawSamples));
     }
 
     // 2. Animaciones por canal

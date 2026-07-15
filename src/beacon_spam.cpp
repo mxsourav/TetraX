@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <U8g2lib.h>
+#include "wifi_helper.h"
 #include "beacon_spam.h"
 #include "ui_theme.h"
 
@@ -78,72 +79,86 @@ void drawXAntenna(int x, int y, int frame) {
     if (frame >= 3) u8g2.drawCircle(x+8, y+2, 10, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT);
 }
 
+#include "input_manager.h"
+
 void beaconSpamLoop() {
-    if (digitalRead(32) == LOW) { 
+    Input.update();
+    
+    if (Input.pressed(BTN_ID_OK) || Input.pressed(BTN_ID_AUX)) {
         isSpamming = !isSpamming;
         if (isSpamming) {
-            WiFi.mode(WIFI_STA);
-            esp_wifi_set_promiscuous(true);
+            WifiHelper::setupPromiscuous();
         } else {
-            esp_wifi_set_promiscuous(false);
-            WiFi.mode(WIFI_OFF);
+            WifiHelper::teardownPromiscuous();
         }
-        delay(400);
+    }
+
+    if (Input.pressed(BTN_ID_BACK) || Input.cancelRequested()) {
+        if (isSpamming) {
+            isSpamming = false;
+            WifiHelper::teardownPromiscuous();
+        }
+        extern bool runningApp;
+        runningApp = false;
+        return;
     }
 
     if (isSpamming) {
-        while (isSpamming) {
-            for (int i = 0; i < total_ssids; i++) {
-                // --- MEJORA BYPASS IPHONE 13: MAC ALEATORIA ---
-                packet[10] = 0x00; packet[11] = 0x16; packet[12] = 0xEA; // Vendor Intel/Cisco
-                packet[13] = random(0, 255); packet[14] = random(0, 255); packet[15] = (uint8_t)i;
-                memcpy(&packet[16], &packet[10], 6); // BSSID = Source
+        for (int i = 0; i < total_ssids; i++) {
+            // --- MEJORA BYPASS IPHONE 13: MAC ALEATORIA ---
+            packet[10] = 0x00; packet[11] = 0x16; packet[12] = 0xEA; // Vendor Intel/Cisco
+            packet[13] = random(0, 255); packet[14] = random(0, 255); packet[15] = (uint8_t)i;
+            memcpy(&packet[16], &packet[10], 6); // BSSID = Source
 
-                // SSID
-                int len = strlen(ssids[i]);
-                packet[36] = 0x00; packet[37] = len; 
-                for (int j = 0; j < len; j++) packet[38 + j] = ssids[i][j]; 
-                
-                int p = 38 + len;
-                // Rates (Crucial para iPhone)
-                packet[p++] = 0x01; packet[p++] = 0x08;
-                packet[p++] = 0x82; packet[p++] = 0x84; packet[p++] = 0x8b; packet[p++] = 0x96;
-                packet[p++] = 0x24; packet[p++] = 0x30; packet[p++] = 0x48; packet[p++] = 0x6c;
+            // SSID
+            int len = strlen(ssids[i]);
+            packet[36] = 0x00; packet[37] = len; 
+            for (int j = 0; j < len; j++) packet[38 + j] = ssids[i][j]; 
+            
+            int p = 38 + len;
+            // Rates (Crucial para iPhone)
+            packet[p++] = 0x01; packet[p++] = 0x08;
+            packet[p++] = 0x82; packet[p++] = 0x84; packet[p++] = 0x8b; packet[p++] = 0x96;
+            packet[p++] = 0x24; packet[p++] = 0x30; packet[p++] = 0x48; packet[p++] = 0x6c;
 
-                // Canal
-                packet[p++] = 0x03; packet[p++] = 0x01;
-                int ch = random(1, 11); // Evitar canales altos problemáticos
-                packet[p++] = (uint8_t)ch;
+            // Canal
+            packet[p++] = 0x03; packet[p++] = 0x01;
+            int ch = random(1, 11); // Evitar canales altos problemAticos
+            packet[p++] = (uint8_t)ch;
 
-                // --- MEJORA BYPASS IPHONE 13: RSN (WPA2) ---
-                packet[p++] = 0x30; packet[p++] = 0x14; 
-                packet[p++] = 0x01; packet[p++] = 0x00; packet[p++] = 0x00; packet[p++] = 0x0f;
-                packet[p++] = 0xac; packet[p++] = 0x04; packet[p++] = 0x01; packet[p++] = 0x00;
-                packet[p++] = 0x00; packet[p++] = 0x0f; packet[p++] = 0xac; packet[p++] = 0x04;
-                packet[p++] = 0x01; packet[p++] = 0x00; packet[p++] = 0x00; packet[p++] = 0x0f;
-                packet[p++] = 0xac; packet[p++] = 0x02; packet[p++] = 0x00; packet[p++] = 0x00;
+            // --- MEJORA BYPASS IPHONE 13: RSN (WPA2) ---
+            packet[p++] = 0x30; packet[p++] = 0x14; 
+            packet[p++] = 0x01; packet[p++] = 0x00; packet[p++] = 0x00; packet[p++] = 0x0f;
+            packet[p++] = 0xac; packet[p++] = 0x04; packet[p++] = 0x01; packet[p++] = 0x00;
+            packet[p++] = 0x00; packet[p++] = 0x0f; packet[p++] = 0xac; packet[p++] = 0x04;
+            packet[p++] = 0x01; packet[p++] = 0x00; packet[p++] = 0x00; packet[p++] = 0x0f;
+            packet[p++] = 0xac; packet[p++] = 0x02; packet[p++] = 0x00; packet[p++] = 0x00;
 
-                esp_wifi_set_channel(ch, WIFI_SECOND_CHAN_NONE);
-                esp_wifi_80211_tx(WIFI_IF_STA, packet, p, false);
-                
-                // --- GESTIÓN DE ANIMACIÓN ---
-                if (millis() - lastAnimUpdate > 100) {
-                    lastAnimUpdate = millis();
-                    animFrame = (animFrame + 1) % 4;
-                    u8g2.clearBuffer();
-                    drawBeaconActive(animFrame);
-                    u8g2.sendBuffer(); oledMirrorSync();
+            esp_wifi_set_channel(ch, WIFI_SECOND_CHAN_NONE);
+            esp_wifi_80211_tx(WIFI_IF_STA, packet, p, false);
+            
+            // Allow input processing during spamming
+            Input.update();
+            if (Input.pressed(BTN_ID_BACK) || Input.cancelRequested() || Input.pressed(BTN_ID_OK)) {
+                isSpamming = false;
+                WifiHelper::teardownPromiscuous();
+                if (Input.pressed(BTN_ID_BACK) || Input.cancelRequested()) {
+                    extern bool runningApp;
+                    runningApp = false;
                 }
-
-                if (digitalRead(25) == LOW) { 
-                    isSpamming = false;
-                    esp_wifi_set_promiscuous(false);
-                    WiFi.mode(WIFI_OFF);
-                    return;
-                }
+                return;
             }
-            yield();
         }
+        
+        // --- GESTION DE ANIMACION ---
+        if (millis() - lastAnimUpdate > 100) {
+            lastAnimUpdate = millis();
+            animFrame = (animFrame + 1) % 4;
+            u8g2.clearBuffer();
+            drawBeaconActive(animFrame);
+            u8g2.sendBuffer(); oledMirrorSync();
+        }
+
     } else {
         u8g2.clearBuffer();
         drawBeaconIdle();

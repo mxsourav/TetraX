@@ -141,7 +141,7 @@ static void drawScanningList() {
     snprintf(status, sizeof(status), "%02ds", (int)((millis() - scanStartMs) / 1000));
     UiTheme::drawHeader(u8g2, "WIFI RADAR", status);
     UiTheme::drawSpinner(u8g2, 64, 35, (millis() / 90) & 0xFF);
-    UiTheme::drawCenteredText(u8g2, 56, "ESCANEANDO AP");
+    UiTheme::drawCenteredText(u8g2, 56, "SCANNING AP");
     u8g2.sendBuffer(); oledMirrorSync();
 }
 
@@ -172,7 +172,7 @@ static void drawNetworkList() {
     if (networkCount == 0) {
         char msg[18];
         snprintf(msg, sizeof(msg), "RAW %02d OK=RESCAN", lastListScanResult);
-        UiTheme::drawToast(u8g2, "SIN REDES", msg);
+        UiTheme::drawToast(u8g2, "NO NETWORKS", msg);
         u8g2.sendBuffer(); oledMirrorSync();
         return;
     }

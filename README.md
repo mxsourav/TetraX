@@ -1,163 +1,55 @@
-# ⚡ TetraX
+# TetraX: Advanced RF Diagnostic & Network Auditing Subsystem
 
-> One of the most compact, bare-minimum-feathers cyber pen testing tool built on ESP32.
+**Developer: mx_sourav**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-ESP32-blue.svg)](#hardware)
-[![Version](https://img.shields.io/badge/Version-v1.0.0-green.svg)](RELEASE_NOTES.md)
+TetraX is an advanced, multi-protocol RF diagnostic and security auditing platform designed for deep 802.11, Bluetooth Low Energy (BLE), and Sub-GHz infrastructure analysis. Built on the ESP32 microcontroller, TetraX leverages low-level hardware abstraction to manipulate network stacks far beyond standard operational boundaries, providing enterprise-grade packet injection, spectral analysis, and hardware coexistence diagnostics.
 
----
+This repository contains the full source code for the TetraX firmware, enabling hardware-level manipulation of the ESP32's RF frontend.
 
-## 📖 Overview
+## Core Technical Architecture
 
-**TetraX** is a pocket-sized, all-in-one cybersecurity research tool powered by the ESP32 microcontroller. It packs WiFi analysis, Bluetooth reconnaissance, RF spectrum tools, IR transceiver capabilities, and a web-based SPA dashboard into a single compact device — perfect for security researchers, pen testers, and hardware enthusiasts.
+TetraX operates by bypassing the standard ESP-IDF Wi-Fi/Bluetooth stack restrictions to interface directly with the physical (PHY) and media access control (MAC) layers. The architecture is modular, operating across three primary domains:
 
----
+### 1. 802.11 Promiscuous Mode & Frame Injection
+Standard network interfaces discard frames not explicitly destined for their MAC address. TetraX utilizes the ESP32's `esp_wifi_set_promiscuous` API to drop the MAC layer filter, capturing all IEEE 802.11 traffic within the 2.4GHz band. 
 
-## ✨ Features
+- **Packet Sniffing & Parsing**: By hooking into the RX callback (`esp_wifi_set_promiscuous_rx_cb`), TetraX parses raw 802.11 frames (Management, Control, and Data frames). It extracts BSSID, RSSI, channel data, and encrypted payload signatures directly from the air, allowing passive mapping of hidden network topologies without association.
+- **Raw Frame Injection (802.11w Bypass)**: The firmware utilizes a patched `libnet80211.a` to bypass Espressif's standard sanity checks on raw frame injection. This allows the construction and transmission of arbitrary 802.11 management frames.
+  - *Deauthentication/Disassociation*: TetraX constructs highly targeted IEEE 802.11 Class 3 management frames with spoofed sender MAC addresses to forcibly sever client associations, enabling handshake capture and network stability testing.
+  - *Beacon Spamming*: By crafting custom 802.11 Beacon frames containing Information Elements (IEs) specifying arbitrary SSIDs, TetraX saturates the surrounding RF environment with phantom access points, stress-testing the parsing logic of local wireless clients.
 
-### 📡 WiFi Toolkit
-- **WiFi Scanner** — Scan and enumerate nearby access points with signal strength, channel, and encryption info
-- **WiFi Radar** — Real-time visual radar display of surrounding wireless networks
-- **Channel Scanner** — Per-channel activity analysis and congestion mapping
-- **Packet Monitor** — Live 802.11 packet capture and traffic visualization
-- **Centinela Mode** — Passive watchdog monitoring for network changes
-- **IP Scanner** — Discover active hosts on a connected network with parallel ping sweeps
-- **Web Dashboard** — Full SPA control panel served from the ESP32's built-in access point
+### 2. BLE Link Layer Manipulation
+The Bluetooth Low Energy stack is stripped down to allow direct manipulation of advertising packets. 
 
-### 📻 RF Tools (nRF24L01+)
-- **RF Spectrum Analyzer** — Sweep 2.4 GHz band and visualize channel usage
-- **RF Heatmap** — Color-coded heatmap of RF energy across channels
-- **Channel Advisor** — Recommends the cleanest channel based on spectrum data
-- **NRF Link** — Point-to-point data link between two nRF24 modules
-- **NRF Chat** — Encrypted text messaging over nRF24
-- **BT/WiFi Coexistence View** — Visualize interference between Bluetooth and WiFi
-- **Dual NRF Scope** — Simultaneous monitoring with two nRF24 modules
+- **Advertisement Saturation**: TetraX constructs malformed or highly repetitive BLE GAP (Generic Access Profile) advertising payloads. By injecting crafted payloads simulating Apple Continuity, Microsoft Swift Pair, or Google Fast Pair, the device forces nearby BLE controllers into continuous parsing loops, evaluating the resilience of modern smartphone OS background processing.
+- **Spectrum Saturation**: TetraX rapidly cycles through the primary BLE advertising channels (37, 38, 39), maximizing spatial and temporal RF footprint to audit receiver desensitization.
 
-### 🔵 Bluetooth
-- **BT Scanner** — Discover classic Bluetooth devices in range
-- **BT Analyzer** — Deep-dive analysis of detected Bluetooth devices
-- **BT Spectrum** — Bluetooth frequency hopping visualization
+### 3. Sub-GHz and RF Coexistence (NRF24)
+TetraX integrates native support for the NRF24L01 transceiver module via SPI, allowing parallel 2.4GHz operations that intentionally evade standard 802.11/BLE collision avoidance protocols.
 
-### 🔴 IR Tools
-- **IR Remote** — Universal TV remote supporting multiple brands:
-  - Samsung, LG, Sony, Panasonic, and more
-  - Commands: Power, Vol+/-, Ch+/-, Mute, Home, Back
-- **AC Remote** — Air conditioner remote control *(⚠️ Not stable yet — experimental)*
-- **IR Receiver** — Capture and decode incoming IR signals (protocol, address, command)
-- **IR Jammer** — 38 kHz carrier flood for IR channel testing
-- **IR from SD Card** — Load and replay IR signal recordings from microSD
+- **Continuous Wave (CW) Transmission**: By manipulating the NRF24 hardware registers directly (bypassing packet handling), TetraX forces the PLL into a continuous unmodulated carrier wave transmission state. This physically blocks specific 1MHz channels in the 2.4GHz ISM band, providing a benchmark for WiFi/BT coexistence and interference recovery algorithms.
+- **Hardware Master/Slave Synchronization**: TetraX exposes raw hardware UART on GPIO 1 and 3, allowing it to act as a headless slave module coordinated by external hardware.
 
-### 💾 SD Card Support
-- Load/save IR signal recordings
-- Persistent storage for captured data and logs
-- Shared VSPI bus with nRF24 modules
+## Building and Deployment
 
-### 🎮 Built-in Games
-- Arcade mini-games collection: Dino, Flappy, Snake, Space, Pong
-
-### 🖥️ SPA Web Dashboard
-- Single-Page Application served directly from the ESP32
-- Real-time device status, network stats, and tool control
-- Accessible via browser at `192.168.4.1` when connected to the device AP
-- **Will be hosted online for documentation and demo purposes**
-
-### ⚙️ System
-- Slave device control over ESP-NOW
-- Log viewer for captured data
-- About screen with device info and firmware version
-- OLED display (128×64 SSD1306) with custom themed UI
-
----
-
-## 🔧 Hardware
-
-| Component | Description |
-|-----------|-------------|
-| **MCU** | ESP32 DevKit V1 |
-| **Display** | 0.96″ SSD1306 OLED (I2C — SDA:21, SCL:22) |
-| **RF Module** | 2× nRF24L01+ (VSPI — CE:5/16, CSN:17/4) |
-| **IR TX** | IR LED on GPIO 2 |
-| **IR RX** | IR Receiver on GPIO 35 |
-| **SD Card** | MicroSD module (VSPI — CS:13) |
-| **Buttons** | 5 tactile buttons (UP:26, DOWN:33, OK:32, BACK:25, AUX:27) |
-| **Power** | TP4056 LiPo charger + step-up converter |
-
----
-
-## 🚀 Getting Started
+TetraX relies on PlatformIO and requires a specific, statically linked library patch to enable raw frame injection. 
 
 ### Prerequisites
-- [PlatformIO](https://platformio.org/) (VS Code extension or CLI)
-- ESP32 DevKit V1 board
-- USB cable for flashing
+- ESP32 Development Board (WROOM-32 or WROVER based)
+- PlatformIO Core CLI or VSCode Extension
+- NRF24L01 module (optional, for Sub-GHz/Hardware Jamming routines)
 
-### Build & Flash
+### Compilation
+The build environment forces the `framework-arduinoespressif32` core into a specific state. Do not update the core version beyond the locked dependency in `platformio.ini`, as changes to the proprietary Espressif blobs will break the injection patches.
+
 ```bash
-# Clone the repository
-git clone https://github.com/mxsourav/TetraX.git
-cd TetraX
-
-# Build and upload via PlatformIO
-pio run --target upload
-
-# Monitor serial output
-pio device monitor --baud 115200
+pio run -e esp32dev -t upload
 ```
 
-### Pre-built Binaries
-Pre-compiled firmware binaries are available in the [`binarios/`](binarios/) directory for direct flashing without building from source.
+## Legal and Ethical Use
 
----
+TetraX is engineered strictly for network administrators, RF engineers, and authorized security researchers. The low-level injection and interference capabilities implemented in this firmware are highly destructive to localized network infrastructure. 
 
-## 📁 Project Structure
+It is the responsibility of the operator to ensure that this tool is deployed exclusively in controlled laboratory environments or on networks where explicit, legally binding authorization has been granted. Unauthorized use of 802.11 deauthentication, BLE spamming, or RF carrier wave interference may violate federal telecommunications laws (e.g., FCC regulations). 
 
-```
-TetraX/
-├── src/                  # C++ source files (all modules)
-├── include/              # Header files
-├── companion_app/        # Companion application (WIP)
-├── binarios/             # Pre-built firmware binaries
-├── img/                  # Component images & diagrams
-├── index.html            # SPA web dashboard
-├── style.css             # Dashboard styles
-├── script.js             # Dashboard logic
-├── manifest.json         # PWA manifest
-├── platformio.ini        # PlatformIO build configuration
-└── RELEASE_NOTES.md      # Version changelog
-```
-
----
-
-## 📦 Dependencies
-
-| Library | Version |
-|---------|---------|
-| RF24 | ^1.4.7 |
-| U8g2 | ^2.35.9 |
-| ESP32Ping | ^1.7 |
-| ESPAsyncWebServer | latest |
-| AsyncTCP | latest |
-| ESP32 BLE Keyboard | ^0.3.2 |
-| IRremote | latest |
-
----
-
-## 👤 Author
-
-**mxsourav**
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-## ⚠️ Disclaimer
-
-This tool is intended for **authorized security research and educational purposes only**. Always obtain proper authorization before testing any network or device. The author is not responsible for any misuse.
-  
-## ??? SATAN-UI Architecture  
-Please see the [SATAN-UI README](SATAN-UI/README.md) for the complete WebSerial bridge topology and architecture diagrams. 
+**Developer:** mx_sourav

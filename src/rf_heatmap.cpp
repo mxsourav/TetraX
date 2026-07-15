@@ -2,13 +2,11 @@
 #include "oled_mirror.h"
 #include "input_manager.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 static const uint8_t RF_CHANNELS = 125;
@@ -22,13 +20,13 @@ static uint8_t hotBucket = 0;
 static uint8_t hotLevel = 0;
 static uint8_t frameTick = 0;
 
-static uint8_t sampleRadio(RF24& radio, uint8_t channel) {
-    radio.setChannel(channel);
+static uint8_t sampleRadioLocal(uint8_t channel) {
+    activeRadio->setChannel(channel);
     delayMicroseconds(95);
 
     uint8_t hits = 0;
     for (uint8_t i = 0; i < SAMPLES_PER_CHANNEL; i++) {
-        if (radio.testCarrier()) hits++;
+        if (activeRadio->testCarrier()) hits++;
     }
     return hits;
 }
@@ -55,18 +53,11 @@ static void scanHeatRow(uint8_t* outRow) {
     memset(bucketEnergy, 0, sizeof(bucketEnergy));
     memset(bucketSamples, 0, sizeof(bucketSamples));
 
-    for (uint8_t i = 0; i < 63; i++) {
-        uint8_t ch1 = i;
-        uint8_t b1 = min<uint8_t>(ch1 / 4, BUCKET_COUNT - 1);
-        bucketEnergy[b1] += sampleRadio(jam1, ch1);
-        bucketSamples[b1]++;
-
-        uint8_t ch2 = i + 63;
-        if (ch2 < RF_CHANNELS) {
-            uint8_t b2 = min<uint8_t>(ch2 / 4, BUCKET_COUNT - 1);
-            bucketEnergy[b2] += sampleRadio(jam2, ch2);
-            bucketSamples[b2]++;
-        }
+    // Sequential scan of all 125 channels with single radio
+    for (uint8_t ch = 0; ch < RF_CHANNELS; ch++) {
+        uint8_t b = min<uint8_t>(ch / 4, BUCKET_COUNT - 1);
+        bucketEnergy[b] += sampleRadioLocal(ch);
+        bucketSamples[b]++;
     }
 
     hotBucket = 0;
@@ -79,6 +70,8 @@ static void scanHeatRow(uint8_t* outRow) {
         }
     }
     sweeps++;
+    // Periodic recovery check
+    if ((sweeps & 0x000F) == 0) safeNrfRecovery(activeRadio, 0, false);
 }
 
 static void drawCell(uint8_t x, uint8_t y, uint8_t level) {
@@ -138,17 +131,11 @@ static void drawHeatmap() {
 void rfHeatmapEnter() {
     WiFi.mode(WIFI_OFF);
 
-    jam1.begin();
-    jam1.setAutoAck(false);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.startListening();
-
-    jam2.begin();
-    jam2.setAutoAck(false);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.startListening();
+    activeRadio->begin();
+    activeRadio->setAutoAck(false);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->startListening();
 
     memset(heatRows, 0, sizeof(heatRows));
     sweeps = 0;
@@ -158,8 +145,7 @@ void rfHeatmapEnter() {
 }
 
 void rfHeatmapExit() {
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopListening();
     memset(heatRows, 0, sizeof(heatRows));
 }
 

@@ -800,7 +800,7 @@ static void drawAnalyzerList(const ListItem* items, uint8_t n, int selPos) {
 
     if (n == 0) {
         u8g2.setFont(u8g2_font_5x7_tr);
-        UiTheme::drawCenteredText(u8g2, 28, "ESCANEANDO BLE");
+        UiTheme::drawCenteredText(u8g2, 28, "SCANNING BLE");
         drawSearchingAnimation(64, 52, 100);
         drawWipeOverlay();
         return;

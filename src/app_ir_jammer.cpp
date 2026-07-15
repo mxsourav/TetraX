@@ -147,10 +147,10 @@ void irJammerLoop() {
     Input.update();
     
     if (state == STATE_JAMMER_SELECT) {
-        if (Input.pressed(BTN_ID_UP)) {
+        if (Input.repeating(BTN_ID_UP)) {
             if (selectedMode > 0) selectedMode--;
         }
-        if (Input.pressed(BTN_ID_DOWN)) {
+        if (Input.repeating(BTN_ID_DOWN)) {
             if (selectedMode < 1) selectedMode++;
         }
         if (Input.pressed(BTN_ID_OK)) {

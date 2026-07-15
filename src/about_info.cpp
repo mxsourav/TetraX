@@ -22,15 +22,15 @@ struct MatrixDrop {
 static MatrixDrop drops[12];
 
 static const char* about_lines[] = {
-    "Dev: PepeAngell",
+    "Dev: MX 100RAV",
     "ESP32 DevKit",
     "Display: SSD1306",
     "RF: nRF24 PA/LNA",
-    "Suite: BWifiKill",
+    "Suite: TetraX",
     "Version: 4.0",
     "Build: V4 Visual",
-    "IG: pepeangelll",
-    "Git: pepeangell5",
+    "IG: mx_sourav",
+    "Git: mx_sourav",
     "FB: esp32tools"
 };
 

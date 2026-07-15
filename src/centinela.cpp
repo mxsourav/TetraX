@@ -1,4 +1,5 @@
 #include "centinela.h"
+#include "buzzer_manager.h"
 #include "oled_mirror.h"
 #include "ui_theme.h"
 #include "app_config.h"
@@ -34,6 +35,7 @@ void centinela_sniffer_callback(void* buf, wifi_promiscuous_pkt_type_t type) {
         attack_packets++;
         last_sec_packets++;
         last_packet_time = millis();
+        BuzzerManager::beep(5, 1);
     }
 }
 

@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <U8g2lib.h>
 #include "esp_wifi.h"
+#include "buzzer_manager.h"
 
 #include "app_config.h"
 #include "ui_theme.h"
@@ -123,7 +124,8 @@ static void drawStringFit(int x, int y, const String& text, uint16_t color, int 
 
 static void beep(uint16_t freq, uint16_t durationMs) {
     (void)freq;
-    delay(durationMs);
+    (void)durationMs;
+    BuzzerManager::beep(5);
 }
 
 static bool waitOkReleaseWasLong() {
@@ -206,20 +208,7 @@ static void drawScanProgress(const char* title, int percent, int found, const St
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  PATCH · anula la validacion de frames 802.11
-//  Requiere que ieee80211_raw_frame_sanity_check este debilitado en
-//  libnet80211.a via: objcopy --weaken-symbol=ieee80211_raw_frame_sanity_check
-//  Framework: arduinoespressif32 v3.20011.230801
-// ═══════════════════════════════════════════════════════════════════════════
-extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg,
-                                                 int32_t arg2,
-                                                 int32_t arg3) {
-    static bool logged = false;
-    if (!logged) {
-        Serial.println("[SANITY_CHECK] Override active — raw frame bypass engaged.");
-        logged = true;
-    }
-    return 0;   // siempre permitir: 0 = pass
-}
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  CONFIGURACIÓN
@@ -342,7 +331,7 @@ static void sendDeauth(const uint8_t target[6], const uint8_t bssid[6]) {
 static bool showDisclaimer() {
     drawOledHeader("DEAUTHER", "AVISO");
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(4, 24, "Solo redes propias");
+    u8g2.drawStr(4, 24, "Own networks only");
     u8g2.drawStr(4, 34, "o con permiso.");
     u8g2.drawStr(4, 45, "Uso ajeno es ilegal.");
     drawOledFooter("OK acepta  BACK sale");
@@ -350,12 +339,12 @@ static bool showDisclaimer() {
 
     while (true) {
         if (pressedPin(BTN_OK)) {
-            beep(2200, 60);
+            beep(2200, 5);
             waitRelease(BTN_OK);
             return true;
         }
         if (pressedPin(BTN_BACK)) {
-            beep(800, 100);
+            beep(800, 5);
             waitRelease(BTN_BACK);
             return false;
         }
@@ -378,7 +367,7 @@ static bool showDisclaimer() {
     drawStringCustom(20, y, "- Red con permiso del dueño",    UI_ACCENT, 1); y += 18;
 
     drawStringCustom(10, y, "USO ILEGAL:",                    TFT_RED, 1); y += 12;
-    drawStringCustom(20, y, "- Redes ajenas sin permiso",     UI_ACCENT, 1); y += 12;
+    drawStringCustom(20, y, "- Ext networks no permission",     UI_ACCENT, 1); y += 12;
     drawStringCustom(20, y, "- Servicios criticos / medicos", UI_ACCENT, 1); y += 12;
     drawStringCustom(20, y, "- Empresas / gobierno",          UI_ACCENT, 1); y += 18;
 
@@ -389,13 +378,13 @@ static bool showDisclaimer() {
 
     while (true) {
         if (digitalRead(BTN_OK) == LOW) {
-            beep(2200, 60);
+            beep(2200, 5);
             while (digitalRead(BTN_OK) == LOW) delay(5);
             delay(100);
             return true;
         }
         if (digitalRead(BTN_UP) == LOW || digitalRead(BTN_DOWN) == LOW) {
-            beep(800, 100);
+            beep(800, 5);
             while (digitalRead(BTN_UP) == LOW || digitalRead(BTN_DOWN) == LOW)
                 delay(5);
             delay(100);
@@ -411,7 +400,7 @@ static bool showDisclaimer() {
 static void scanAPs() {
     apCount = 0;
 
-    drawScanProgress("SCAN AP", 0, 0, String(AP_SCAN_TIME_S) + "s buscando redes");
+    drawScanProgress("SCAN AP", 0, 0, String(AP_SCAN_TIME_S) + "s searching networks");
 
     // WiFi scan estándar (modo STA)
     WiFi.mode(WIFI_STA);
@@ -431,7 +420,7 @@ static void scanAPs() {
         }
 
         int progress = (int)(((millis() - scanStart) * 100UL) / (AP_SCAN_TIME_S * 1000UL));
-        drawScanProgress("SCAN AP", progress, lastCount, "Escaneando WiFi...");
+        drawScanProgress("SCAN AP", progress, lastCount, "Scanning WiFi...");
 
         delay(100);
     }
@@ -475,9 +464,9 @@ static void scanAPs() {
         }
     }
 
-    beep(2000, 40);
+    beep(2000, 5);
     delay(20);
-    beep(2400, 60);
+    beep(2400, 5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -602,7 +591,7 @@ static int selectAP() {
             if (cursor < scrollOffset) scrollOffset = cursor;
             if (cursor >= scrollOffset + VISIBLE_ROWS)
                 scrollOffset = cursor - VISIBLE_ROWS + 1;
-            beep(2100, 20);
+            beep(2100, 5);
             drawAPList(cursor, scrollOffset);
             delay(180);
         }
@@ -611,22 +600,22 @@ static int selectAP() {
             if (cursor < scrollOffset) scrollOffset = cursor;
             if (cursor >= scrollOffset + VISIBLE_ROWS)
                 scrollOffset = cursor - VISIBLE_ROWS + 1;
-            beep(2100, 20);
+            beep(2100, 5);
             drawAPList(cursor, scrollOffset);
             delay(180);
         }
         if (pressedPin(BTN_BACK)) {
-            beep(1000, 40);
+            beep(1000, 5);
             waitRelease(BTN_BACK);
             return -3;
         }
         if (pressedPin(BTN_AUX)) {
-            beep(1500, 40);
+            beep(1500, 5);
             waitRelease(BTN_AUX);
             return -2;
         }
         if (pressedPin(BTN_OK)) {
-            beep(1800, 40);
+            beep(1800, 5);
             waitRelease(BTN_OK);
             if (cursor == 0)              return -1;   // RAMBO
             if (cursor == apCount + 1)    return -2;   // RESCAN
@@ -643,19 +632,19 @@ static bool confirmRambo() {
     drawOledHeader("RAMBO MODE", "WARN");
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(4, 24, "Ataca todas las APs");
-    u8g2.drawStr(4, 34, "detectadas.");
+    u8g2.drawStr(4, 34, "detected.");
     u8g2.drawStr(4, 45, "Responsabilidad tuya.");
     drawOledFooter("OK sigue  BACK canc");
     u8g2.sendBuffer(); oledMirrorSync();
 
     while (true) {
         if (pressedPin(BTN_OK)) {
-            beep(2200, 60);
+            beep(2200, 5);
             waitRelease(BTN_OK);
             return true;
         }
         if (pressedPin(BTN_BACK)) {
-            beep(800, 100);
+            beep(800, 5);
             waitRelease(BTN_BACK);
             return false;
         }
@@ -670,7 +659,7 @@ static bool confirmRambo() {
     tft.drawFastHLine(0, 48, 320, TFT_RED);
 
     int y = 58;
-    drawStringCustom(10, y, "Atacara TODAS las redes WiFi",   UI_MAIN, 1); y += 12;
+    drawStringCustom(10, y, "Attack ALL WiFi networks",   UI_MAIN, 1); y += 12;
     drawStringCustom(10, y, "cercanas simultaneamente.",       UI_MAIN, 1); y += 20;
 
     drawStringCustom(10, y, "Rota canales 1, 6 y 11.",         UI_ACCENT, 1); y += 20;
@@ -688,13 +677,13 @@ static bool confirmRambo() {
 
     while (true) {
         if (digitalRead(BTN_OK) == LOW) {
-            beep(2200, 60);
+            beep(2200, 5);
             while (digitalRead(BTN_OK) == LOW) delay(5);
             delay(100);
             return true;
         }
         if (digitalRead(BTN_UP) == LOW || digitalRead(BTN_DOWN) == LOW) {
-            beep(800, 100);
+            beep(800, 5);
             while (digitalRead(BTN_UP) == LOW || digitalRead(BTN_DOWN) == LOW)
                 delay(5);
             delay(100);
@@ -773,29 +762,29 @@ static int selectAction(const APInfo& ap) {
     while (true) {
         if (pressedPin(BTN_UP)) {
             cursor = (cursor - 1 + 2) % 2;
-            beep(2100, 20);
+            beep(2100, 5);
             drawActionMenu(cursor, ap);
             delay(180);
         }
         if (pressedPin(BTN_DOWN)) {
             cursor = (cursor + 1) % 2;
-            beep(2100, 20);
+            beep(2100, 5);
             drawActionMenu(cursor, ap);
             delay(180);
         }
         if (pressedPin(BTN_BACK)) {
-            beep(1000, 40);
+            beep(1000, 5);
             waitRelease(BTN_BACK);
             return -1;
         }
         if (pressedPin(BTN_AUX)) {
             cursor = 1;
-            beep(1500, 40);
+            beep(1500, 5);
             drawActionMenu(cursor, ap);
             waitRelease(BTN_AUX);
         }
         if (pressedPin(BTN_OK)) {
-            beep(1800, 40);
+            beep(1800, 5);
             waitRelease(BTN_OK);
             return cursor;
         }
@@ -942,9 +931,9 @@ static void scanClients(const APInfo& ap) {
         }
     }
 
-    beep(2000, 40);
+    beep(2000, 5);
     delay(20);
-    beep(2400, 60);
+    beep(2400, 5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1050,7 +1039,7 @@ static int selectTarget() {
             if (cursor < scrollOffset) scrollOffset = cursor;
             if (cursor >= scrollOffset + VISIBLE_ROWS)
                 scrollOffset = cursor - VISIBLE_ROWS + 1;
-            beep(2100, 20);
+            beep(2100, 5);
             drawClientList(cursor, scrollOffset);
             delay(180);
         }
@@ -1059,22 +1048,22 @@ static int selectTarget() {
             if (cursor < scrollOffset) scrollOffset = cursor;
             if (cursor >= scrollOffset + VISIBLE_ROWS)
                 scrollOffset = cursor - VISIBLE_ROWS + 1;
-            beep(2100, 20);
+            beep(2100, 5);
             drawClientList(cursor, scrollOffset);
             delay(180);
         }
         if (pressedPin(BTN_BACK)) {
-            beep(1000, 40);
+            beep(1000, 5);
             waitRelease(BTN_BACK);
             return -3;
         }
         if (pressedPin(BTN_AUX)) {
-            beep(1500, 40);
+            beep(1500, 5);
             waitRelease(BTN_AUX);
             return -2;
         }
         if (pressedPin(BTN_OK)) {
-            beep(1800, 40);
+            beep(1800, 5);
             waitRelease(BTN_OK);
             if (cursor == 0)              return -1;   // ALL
             if (cursor == clientCount + 1) return -2;  // RESCAN
@@ -1187,9 +1176,9 @@ static void drawAttackStats(unsigned long elapsed, unsigned long pkts,
 // ═══════════════════════════════════════════════════════════════════════════
 static void runAttackLoop() {
     drawAttackFrame();
-    beep(3000, 40); delay(20);
-    beep(3600, 60); delay(20);
-    beep(2400, 80);
+    beep(3000, 5); delay(20);
+    beep(3600, 5); delay(20);
+    beep(2400, 5);
 
     // ── Setup WiFi para raw tx ──────────────────────────────────────────
     WiFi.mode(WIFI_MODE_NULL);
@@ -1281,8 +1270,8 @@ static void runAttackLoop() {
     esp_wifi_deinit();
     delay(100);
 
-    beep(1800, 40); delay(20);
-    beep(1200, 60);
+    beep(1800, 5); delay(20);
+    beep(1200, 5);
 
     while (digitalRead(BTN_OK) == LOW || digitalRead(BTN_BACK) == LOW || digitalRead(BTN_AUX) == LOW) delay(5);
     delay(150);
@@ -1305,16 +1294,16 @@ void runDeauther() {
         if (apCount == 0) scanAPs();
 
         if (apCount == 0) {
-            drawOledMessage("NO APs", "No hay redes WiFi", "detectadas.", "OK/AUX res BK salir");
+            drawOledMessage("NO APs", "No WiFi networks found", "detected.", "OK/AUX:Rescan BK:Exit");
 
             while (true) {
                 if (pressedPin(BTN_OK) || pressedPin(BTN_AUX)) {
-                    beep(2000, 40);
+                    beep(2000, 5);
                     while (digitalRead(BTN_OK) == LOW || digitalRead(BTN_AUX) == LOW) delay(5);
                     break;
                 }
                 if (pressedPin(BTN_BACK)) {
-                    beep(1000, 60);
+                    beep(1000, 5);
                     waitRelease(BTN_BACK);
                     return;
                 }
@@ -1363,7 +1352,7 @@ void runDeauther() {
             drawOledMessage("NO CLIENTS", "No hay clientes", "Puedes usar broadcast.", "OK/BACK continuar");
 
             while (digitalRead(BTN_OK) == HIGH && digitalRead(BTN_BACK) == HIGH) delay(20);
-            while (digitalRead(BTN_OK) == LOW || digitalRead(BTN_BACK) == LOW) delay(5);
+            while (digitalRead(BTN_OK) == LOW || digitalRead(BTN_BACK) == LOW) { BuzzerManager::update(); delay(5); }
             continue;
         }
 

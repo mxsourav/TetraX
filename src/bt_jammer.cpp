@@ -1,11 +1,9 @@
 #include "bt_jammer.h"
 #include "oled_mirror.h"
-#include <RF24.h>
 #include <U8g2lib.h>
 #include "ui_theme.h"
+#include "nrf_helper.h"
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2 u8g2;
 
 #define BTN_OK 32
@@ -40,7 +38,7 @@ static void drawBtActiveOnce() {
     UiTheme::drawHeader(u8g2, "BT JAMMER", "ON");
     drawBtGlyph(14, 25, millis() / 90);
     u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(47, 33, "MODO MAX");
+    u8g2.drawStr(47, 33, "MAX MODE");
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(49, 45, "HOPPING");
     for (int i = 0; i < 8; i++) {
@@ -49,37 +47,41 @@ static void drawBtActiveOnce() {
 }
 
 void btJammerSetup() {
-    jam1.begin(); jam2.begin();
-    jam1.setAutoAck(false); jam1.setPALevel(RF24_PA_MAX, true);
-    jam1.setDataRate(RF24_1MBPS); jam1.setCRCLength(RF24_CRC_DISABLED);
-    jam2.setAutoAck(false); jam2.setPALevel(RF24_PA_MAX, true);
-    jam2.setDataRate(RF24_1MBPS); jam2.setCRCLength(RF24_CRC_DISABLED);
+    activeRadio->begin();
+    activeRadio->setAutoAck(false); 
+    activeRadio->setPALevel(RF24_PA_MAX, true);
+    activeRadio->setDataRate(RF24_1MBPS); 
+    activeRadio->setCRCLength(RF24_CRC_DISABLED);
 }
 
 void btJammerLoop() {
     if (digitalRead(BTN_OK) == LOW) {
         isBtJamming = !isBtJamming;
         if (!isBtJamming) {
-            jam1.stopConstCarrier(); jam2.stopConstCarrier();
+            activeRadio->stopConstCarrier();
         } else {
             u8g2.clearBuffer();
             drawBtActiveOnce();
             u8g2.sendBuffer(); oledMirrorSync();
-
-            jam1.startConstCarrier(RF24_PA_MAX, hopping_channel[0]);
-            jam2.startConstCarrier(RF24_PA_MAX, hopping_channel[total_bt_chans - 1]);
+            activeRadio->startConstCarrier(RF24_PA_MAX, hopping_channel[0]);
         }
         delay(400);
     }
 
     if (isBtJamming) {
+        unsigned long lastCheck = millis();
         while (isBtJamming) {
             for (int i = 0; i < total_bt_chans; i++) {
-                jam1.setChannel(hopping_channel[i]);
-                jam2.setChannel(hopping_channel[total_bt_chans - 1 - i]);
+                activeRadio->setChannel(hopping_channel[i]);
+            }
+            if (millis() - lastCheck > 1000) {
+                lastCheck = millis();
+                safeNrfRecovery(activeRadio, hopping_channel[0], true);
             }
             if (digitalRead(BTN_OK) == LOW || digitalRead(BTN_BACK) == LOW) {
-                isBtJamming = false; jam1.stopConstCarrier(); jam2.stopConstCarrier(); return;
+                isBtJamming = false; 
+                activeRadio->stopConstCarrier(); 
+                return;
             }
         }
     } else {

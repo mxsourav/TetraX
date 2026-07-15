@@ -1,11 +1,10 @@
 #include "jammer.h"
 #include "oled_mirror.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include "ui_theme.h"
+#include "input_manager.h"
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2 u8g2;
 
 #define BTN_UP 26
@@ -47,63 +46,49 @@ static void drawChannelGauge(int channel, bool active) {
 }
 
 void jammerSetup() {
-    jam1.begin();
-    jam2.begin();
+    activeRadio->begin();
+    activeRadio->setAddressWidth(3);
+    activeRadio->setRetries(0, 0);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setAutoAck(false);
+    activeRadio->stopListening();
+}
 
-    jam1.setAddressWidth(3);
-    jam1.setRetries(0, 0);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setAutoAck(false);
-    jam1.stopListening();
-
-    jam2.setAddressWidth(3);
-    jam2.setRetries(0, 0);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setAutoAck(false);
-    jam2.stopListening();
+void jammerExit() {
+    isAttacking = false;
+    activeRadio->stopConstCarrier();
+    Input.consume(BTN_ID_BACK);
 }
 
 void jammerLoop() {
-    if (digitalRead(BTN_BACK) == LOW) {
-        isAttacking = false;
-        jam1.stopConstCarrier();
-        jam2.stopConstCarrier();
-        delay(200);
-        return;
-    }
-
-    if (digitalRead(BTN_UP) == LOW) {
+    if (Input.repeating(BTN_ID_UP)) {
         if (jamChannel < 14) {
             jamChannel++;
             if (isAttacking) {
                 int freq = (jamChannel * 5) + 2;
-                jam1.startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
+                activeRadio->startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
             }
         }
-        delay(200);
     }
 
-    if (digitalRead(BTN_DOWN) == LOW) {
+    if (Input.repeating(BTN_ID_DOWN)) {
         if (jamChannel > 1) {
             jamChannel--;
             if (isAttacking) {
                 int freq = (jamChannel * 5) + 2;
-                jam1.startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
+                activeRadio->startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
             }
         }
-        delay(200);
     }
 
-    if (digitalRead(BTN_OK) == LOW) {
+    if (Input.pressed(BTN_ID_OK)) {
         isAttacking = !isAttacking;
         int freq = (jamChannel * 5) + 2;
         if (isAttacking) {
-            jam1.startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
+            activeRadio->startConstCarrier(RF24_PA_MAX, (uint8_t)freq);
         } else {
-            jam1.stopConstCarrier();
-            jam2.stopConstCarrier();
+            activeRadio->stopConstCarrier();
         }
-        delay(400);
     }
 
     u8g2.clearBuffer();
@@ -112,9 +97,11 @@ void jammerLoop() {
 
     if (isAttacking) {
         int freq = (jamChannel * 5) + 2;
-        jam2.setChannel(freq);
+        activeRadio->setChannel(freq);
         for (int i = 0; i < 20; i++) {
-            jam2.startWrite(&noise_payload, sizeof(noise_payload), true);
+            activeRadio->startWrite(&noise_payload, sizeof(noise_payload), true);
         }
+        // NRF recovery check during aggressive TX
+        safeNrfRecovery(activeRadio, freq, true);
     }
 }

@@ -13,7 +13,7 @@
 #include "rf_heatmap.h"
 #include "channel_advisor.h"
 #include "coex_view.h"
-#include "dual_nrf_scope.h"
+#include "rf_spectrum_analyzer.h"
 #include "nrf_link.h"
 #include "nrf_chat.h"
 #include "jammer.h"
@@ -38,6 +38,7 @@
 #include "snake_game.h"
 #include "packet_monitor.h"
 #include "gui_helper.h"
+#include "slave_manager.h"
 #include "slave_control.h"
 #include "web_dashboard.h"
 #include "about_info.h"
@@ -46,6 +47,7 @@
 #include "log_viewer.h"
 #include "ble_spam.h"
 #include "app_config.h"
+#include "buzzer_manager.h"
 #include "input_manager.h"
 #include "app_lifecycle.h"
 #include "sd_manager.h"
@@ -67,6 +69,7 @@
 #include "menu_catalog.h"
 #include "Deauther.h"
 #include "oled_mirror.h"
+#include "idle_mode.h"
 void totalJammerSetup(); void totalJammerLoop();
 void btscanSetup(); void btscanLoop();
 void btJammerSetup(); void btJammerLoop();
@@ -85,11 +88,11 @@ bool isTotalAttacking = false;
 bool isHybridActive = false;
 String target_ssid = "Ninguna";
 int target_channel = 1;
+bool inIdleMode = true;
 
 // Constructores literales — NO los reorganizamos para no romper el wiring
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, 22, 21);
 RF24 jam1(5, 17, 16000000);
-RF24 jam2(16, 4, 16000000);
 
 AsyncWebServer asyncServer(AppConfig::WEB_PORT);
 
@@ -106,22 +109,22 @@ const char* menu_labels[] = {
     "WIFI SCANNER",    // 0
     "WIFI RADAR",      // 1
     "CHANNEL SCAN",    // 2
-    "ANALIZADOR",      // 3
+    "RF ANALYZER",     // 3
     "BT SCANNER",      // 4
     "PACKET MONITOR",  // 5
-    "MODO CENTINELA",  // 6
-    "JAMMER CANAL",    // 7
-    "BARRIDO TOTAL",   // 8
+    "SENTINEL MODE",   // 6
+    "CH JAMMER",       // 7
+    "TOTAL JAMMER",    // 8
     "BT JAMMER",       // 9
     "BEACON SPAM",     // 10
     "BLE SPAM (POP)",  // 11
-    "MODO HIBRIDO",    // 12
+    "HYBRID MODE",     // 12
     "EVIL PORTAL",     // 13
     "IP SCANNER",      // 14
-    "CONTROL ESCLAVO", // 15
+    "CONTROL SLAVE",   // 15
     "WEB DASHBOARD",   // 16
     "IR REMOTE",       // 17
-    "LEER LOGS",       // 18
+    "READ LOGS",       // 18
     "ARCADE",          // 19
     "ABOUT",           // 20
     "BT ANALYZER",     // 21
@@ -131,7 +134,7 @@ const char* menu_labels[] = {
     "NRF LINK",        // 25
     "NRF CHAT",        // 26
     "BT/WIFI COEX",    // 27
-    "DUAL NRF SCOPE",  // 28
+    "RF SPECTRUM",     // 28
     "DEAUTHER",        // 29
     "IR RECEIVER",     // 30
     "IR JAMMER",       // 31
@@ -159,16 +162,16 @@ static const App apps[] = {
     /*  3 */ { "ANALIZADOR",      spectrographEnter,  spectrographLoop,  spectrographExit },
     /*  4 */ { "BT SCANNER",      btscanSetup,        btscanLoop,        btscanExit },
     /*  5 */ { "PACKET MONITOR",  monitorEnter,       monitorLoop,       monitorExit      },
-    /*  6 */ { "MODO CENTINELA",  centinelaEnter,     centinelaLoop,     centinelaExit    },
-    /*  7 */ { "JAMMER CANAL",    jammerSetup,        jammerLoop,        nullptr },
+    /*  6 */ { "SENTINEL MODE",  centinelaEnter,     centinelaLoop,     centinelaExit    },
+    /*  7 */ { "JAMMER CANAL",    jammerSetup,        jammerLoop,        jammerExit },
     /*  8 */ { "BARRIDO TOTAL",   totalJammerSetup,   totalJammerLoop,   nullptr },
     /*  9 */ { "BT JAMMER",       btJammerSetup,      btJammerLoop,      nullptr },
     /* 10 */ { "BEACON SPAM",     nullptr,            beaconSpamLoop,    nullptr },
     /* 11 */ { "BLE SPAM (POP)",  bleSpamEnter,       bleSpamLoop,       bleSpamExit },
-    /* 12 */ { "MODO HIBRIDO",    nullptr,            hybridAttackLoop,  nullptr },
+    /* 12 */ { "HYBRID MODE",    nullptr,            hybridAttackLoop,  nullptr },
     /* 13 */ { "EVIL PORTAL",     nullptr,            evilPortalLoop,    nullptr },
     /* 14 */ { "IP SCANNER",      ipScannerEnter,     ipScannerLoop,     ipScannerExit    },
-    /* 15 */ { "CONTROL ESCLAVO", slaveControlEnter,  slaveControlLoop,  slaveControlExit },
+    /* 15 */ { "CONTROL SLAVE", slaveControlEnter,  slaveControlLoop,  slaveControlExit },
     /* 16 */ { "WEB DASHBOARD",   startWebServer,     webDashboardLoop,  nullptr },
     /* 17 */ { "IR REMOTE",       irRemoteEnter,      irRemoteLoop,      irRemoteExit },
     /* 18 */ { "LEER LOGS",       nullptr,            logViewerLoop,     nullptr },
@@ -181,7 +184,7 @@ static const App apps[] = {
     /* 25 */ { "NRF LINK",        nrfLinkEnter,       nrfLinkLoop,       nrfLinkExit },
     /* 26 */ { "NRF CHAT",        nrfChatEnter,       nrfChatLoop,       nrfChatExit },
     /* 27 */ { "BT/WIFI COEX",    coexViewEnter,      coexViewLoop,      coexViewExit },
-    /* 28 */ { "DUAL NRF SCOPE",  dualNrfScopeEnter,  dualNrfScopeLoop,  dualNrfScopeExit },
+    /* 28 */ { "RF SPECTRUM",     rfSpectrumAnalyzerEnter, rfSpectrumAnalyzerLoop, rfSpectrumAnalyzerExit },
     /* 29 */ { "DEAUTHER",        nullptr,            deautherLoop,      nullptr },
     /* 30 */ { "IR RECEIVER",     irReceiverEnter,    irReceiverLoop,    irReceiverExit },
     /* 31 */ { "IR JAMMER",       irJammerEnter,      irJammerLoop,      irJammerExit },
@@ -207,7 +210,6 @@ static void performBackCleanup() {
     
     // 2. stop timers/tasks & 3. stop scans/attacks
     jam1.stopConstCarrier();
-    jam2.stopConstCarrier();
     if (menu_index == 16) asyncServer.end();
 
     // 4. release SPI/radios
@@ -226,10 +228,15 @@ static bool needsRestartAfterExit(int idx) {
 }
 
 void setup() {
+    // FORCE IR PIN LOW IMMEDIATELY TO STOP IT STAYING ON DURING SPLASH SCREEN
+    pinMode(2, OUTPUT);
+    digitalWrite(2, LOW);
+
     Serial.begin(115200);
     u8g2.begin();
 
     Input.begin();
+    BuzzerManager::init();
     Host.registerApps(apps, APPS_COUNT);
 
     for (int i = 0; i <= 100; i += 5) {
@@ -243,29 +250,73 @@ void setup() {
     digitalWrite(AppConfig::SD_CS, HIGH); // Disable SD
     pinMode(AppConfig::NRF1_CSN, OUTPUT);
     digitalWrite(AppConfig::NRF1_CSN, HIGH); // Disable NRF1
-    pinMode(AppConfig::NRF2_CSN, OUTPUT);
-    digitalWrite(AppConfig::NRF2_CSN, HIGH); // Disable NRF2
     
     SPI.begin(18, 19, 23); // SCK, MISO, MOSI
 
     // Inicialización temprana idéntica al original
     jam1.begin();
-    jam2.begin();
 
     // Init IR Transceiver
     IRManager::getInstance().begin();
 
     // Init SD Card
+    bool sdOk = false;
     if (SDManager::getInstance().begin()) {
         SDManager::getInstance().runIsolatedTest();
+        sdOk = true;
     }
     
-    Serial.println("[BWIFIKILL_V4_CONNECTED]");
+    // Hardware Diagnostic Screen
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(5, 15, "HW STATUS:");
+    
+    // Check SD
+    u8g2.drawStr(5, 30, "SD CARD:");
+    u8g2.drawStr(80, 30, sdOk ? "OK" : "FAIL");
+    
+    // Check NRF
+    bool nrfOk = jam1.isChipConnected();
+    u8g2.drawStr(5, 45, "NRF24:");
+    u8g2.drawStr(80, 45, nrfOk ? "OK" : "FAIL");
+    
+    // Check IR
+    u8g2.drawStr(5, 60, "IR TX/RX:");
+    u8g2.drawStr(80, 60, "OK"); // Assuming configured
+    
+    u8g2.sendBuffer();
+    oledMirrorSync();
+    delay(2000); // Show for 2 seconds
+    
+    Serial.println("[TETRAX_V4_CONNECTED]");
+    
+    // Attempt UART handshake for Master-Slave architecture
+    u8g2.clearBuffer();
+    u8g2.drawStr(10, 25, "SEARCHING FOR");
+    u8g2.drawStr(10, 40, "MASTER...");
+    u8g2.sendBuffer(); oledMirrorSync();
+    
+    if (slaveManagerWaitForMaster()) {
+        Serial.println("[SLAVE] Master detected! Entering SLAVE MODE.");
+    } else {
+        Serial.println("[SLAVE] No master. Booting STANDALONE MODE.");
+    }
+
+    // Boot done double beep!
+    BuzzerManager::beepSync(5);
+    delay(40);
+    BuzzerManager::beepSync(5);
 }
 
 unsigned long lastTelemetryMs = 0;
 
 void loop() {
+    BuzzerManager::update();
+    slaveManagerLoop();
+    if (isSlaveModeActive()) {
+        return; // Skip standalone UI and tasks completely
+    }
+
     if (millis() - lastTelemetryMs >= 1000) {
         lastTelemetryMs = millis();
         Serial.printf("[UPTIME] %lu\n", millis() / 1000);
@@ -312,11 +363,20 @@ void loop() {
 
     Input.update();
 
+    if (inIdleMode) {
+        idleModeLoop();
+        inIdleMode = false;
+        // User pressed OK to exit idle mode
+        return;
+    }
+
     if (!runningApp) {
         int old_category = category_index;
 
-        // --- NAVEGACIÓN DEL MENÚ ---
-        // repeating() = primer pulso + auto-repeat fluido (reemplaza delay(200))
+        // --- FLIPPER STYLE MENU NAVIGATION ---
+        // Top-level categories: LEFT / RIGHT
+        // Apps list: UP / DOWN, and LEFT to go back
+        
         if (Input.repeating(BTN_ID_UP)) {
             if (browsingCategoryApps) {
                 const MenuCategory& cat = menuCategoryAt(category_index);
@@ -328,6 +388,7 @@ void loop() {
                 if (category_index < 0) category_index = menuCategoryCount() - 1;
             }
         }
+        
         if (Input.repeating(BTN_ID_DOWN)) {
             if (browsingCategoryApps) {
                 const MenuCategory& cat = menuCategoryAt(category_index);
@@ -359,14 +420,27 @@ void loop() {
             } else {
                 menu_index = menuCategoryAppIndex(category_index, category_app_index);
                 runningApp = true;
-            Host.launch(menu_index);   // llama enter() si está definido
-                delay(300);                 // preserva debounce de entrada del original
+                Host.launch(menu_index);   // llama enter() si estA definido
+                
+                // Wait for user to release OK button so the app doesn't instantly trigger its actions
+                while(digitalRead(AppConfig::BTN_OK) == LOW) {
+                    BuzzerManager::update();
+                    delay(10);
+                }
+                
+                // delay(300); // Removed unnecessary debounce delay to remove input lag
             }
         }
 
-        if (Input.pressed(BTN_ID_BACK) && browsingCategoryApps) {
-            browsingCategoryApps = false;
-            delay(180);
+        if (Input.pressed(BTN_ID_BACK)) {
+            if (browsingCategoryApps) {
+                // BACK in an app list goes back to categories
+                browsingCategoryApps = false;
+                delay(180);
+            } else {
+                inIdleMode = true;
+                delay(180);
+            }
         }
     } else {
         // --- EJECUCIÓN ---

@@ -1,14 +1,12 @@
 #include "channel_advisor.h"
 #include "oled_mirror.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 static const uint8_t RF_CHANNELS = 125;
@@ -24,13 +22,13 @@ static uint16_t bestWifiScore[3] = {0, 0, 0};
 static uint8_t bestNrf[3] = {2, 40, 80};
 static uint16_t bestNrfScore[3] = {0, 0, 0};
 
-static uint8_t sampleRadio(RF24& radio, uint8_t channel) {
-    radio.setChannel(channel);
+static uint8_t sampleRadioLocal(uint8_t channel) {
+    activeRadio->setChannel(channel);
     delayMicroseconds(90);
 
     uint8_t hits = 0;
     for (uint8_t i = 0; i < SAMPLES_PER_CHANNEL; i++) {
-        if (radio.testCarrier()) hits++;
+        if (activeRadio->testCarrier()) hits++;
     }
     return hits;
 }
@@ -100,18 +98,13 @@ static void analyzeProfile() {
 }
 
 static void scanProfile() {
-    for (uint8_t i = 0; i < 63; i++) {
-        uint8_t ch1 = i;
-        uint8_t s1 = sampleRadio(jam1, ch1);
-        profile[ch1] = (profile[ch1] * 3 + s1) / 4;
-
-        uint8_t ch2 = i + 63;
-        if (ch2 < RF_CHANNELS) {
-            uint8_t s2 = sampleRadio(jam2, ch2);
-            profile[ch2] = (profile[ch2] * 3 + s2) / 4;
-        }
+    // Sequential scan with single radio
+    for (uint8_t ch = 0; ch < RF_CHANNELS; ch++) {
+        uint8_t s = sampleRadioLocal(ch);
+        profile[ch] = (profile[ch] * 3 + s) / 4;
     }
     sweeps++;
+    if ((sweeps & 0x000F) == 0) safeNrfRecovery(activeRadio, 0, false);
     analyzeProfile();
 }
 
@@ -168,17 +161,11 @@ static void drawAdvisor() {
 void channelAdvisorEnter() {
     WiFi.mode(WIFI_OFF);
 
-    jam1.begin();
-    jam1.setAutoAck(false);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setPALevel(RF24_PA_MAX);
-    jam1.startListening();
-
-    jam2.begin();
-    jam2.setAutoAck(false);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setPALevel(RF24_PA_MAX);
-    jam2.startListening();
+    activeRadio->begin();
+    activeRadio->setAutoAck(false);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setPALevel(RF24_PA_MAX);
+    activeRadio->startListening();
 
     memset(profile, 0, sizeof(profile));
     sweeps = 0;
@@ -187,8 +174,7 @@ void channelAdvisorEnter() {
 }
 
 void channelAdvisorExit() {
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopListening();
     memset(profile, 0, sizeof(profile));
 }
 

@@ -13,6 +13,7 @@
 
 #include "app_config.h"
 #include "ui_theme.h"
+#include "buzzer_manager.h"
 
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 extern bool runningApp;
@@ -112,13 +113,14 @@ static bool pressed(uint8_t pin) {
 }
 
 static void waitRelease(uint8_t pin) {
-    while (digitalRead(pin) == LOW) delay(5);
+    while (digitalRead(pin) == LOW) { BuzzerManager::update(); delay(5); }
     delay(80);
 }
 
 static void beep(uint16_t freq, uint16_t durationMs) {
     (void)freq;
-    delay(durationMs);
+    (void)durationMs;
+    BuzzerManager::beep(5);
 }
 
 static String fitOledText(String text, int maxPx) {
@@ -313,12 +315,12 @@ static bool showDisclaimer() {
 
     while (true) {
         if (pressed(BTN_OK)) {
-            beep(2200, 60);
+            beep(2200, 5);
             waitRelease(BTN_OK);
             return true;
         }
         if (pressed(BTN_BACK)) {
-            beep(1000, 80);
+            beep(1000, 5);
             waitRelease(BTN_BACK);
             return false;
         }
@@ -353,28 +355,28 @@ static int selectMode() {
     while (true) {
         if (pressed(BTN_UP)) {
             cursor = (cursor - 1 + MODE_COUNT) % MODE_COUNT;
-            beep(2100, 20);
+            beep(2100, 5);
             drawModeMenu(cursor);
             delay(180);
         }
         if (pressed(BTN_DOWN)) {
             cursor = (cursor + 1) % MODE_COUNT;
-            beep(2100, 20);
+            beep(2100, 5);
             drawModeMenu(cursor);
             delay(180);
         }
         if (pressed(BTN_BACK)) {
-            beep(1000, 50);
+            beep(1000, 5);
             waitRelease(BTN_BACK);
             return -1;
         }
         if (pressed(BTN_AUX)) {
-            beep(1600, 40);
+            beep(1600, 5);
             waitRelease(BTN_AUX);
             return SPAM_CHAOS;
         }
         if (pressed(BTN_OK)) {
-            beep(1800, 50);
+            beep(1800, 5);
             waitRelease(BTN_OK);
             return cursor;
         }
@@ -435,9 +437,9 @@ void runBLESpam() {
         adv->setMaxInterval(0x40);
 
         drawAttackFrame(activeMode);
-        beep(2400, 40);
+        beep(2400, 5);
         delay(20);
-        beep(3000, 60);
+        beep(3000, 5);
 
         packetsSent = 0;
         unsigned long lastStatsUpdate = millis();
@@ -474,9 +476,9 @@ void runBLESpam() {
         adv->stop();
         BLEDevice::deinit(false);
 
-        beep(1800, 40);
+        beep(1800, 5);
         delay(20);
-        beep(1200, 60);
+        beep(1200, 5);
 
         while (digitalRead(BTN_OK) == LOW ||
                digitalRead(BTN_BACK) == LOW ||

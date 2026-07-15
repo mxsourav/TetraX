@@ -163,7 +163,7 @@ void slaveControlLoop() {
     snprintf(status, sizeof(status), "%s", estadoEsclavoActual ? "ON" : "OFF");
 
     u8g2.clearBuffer();
-    UiTheme::drawHeader(u8g2, "CONTROL ESCLAVO", status);
+    UiTheme::drawHeader(u8g2, "CONTROL SLAVE", status);
 
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 25, "PEER");

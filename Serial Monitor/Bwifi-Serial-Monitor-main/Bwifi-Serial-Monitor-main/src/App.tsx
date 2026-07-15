@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { useWebSerial } from './useWebSerial';
+import { RFVisualizer, NrfTelemetry } from './RFVisualizer';
 
 // Color Preset Themes
 const COLOR_PRESETS = [
@@ -80,6 +81,25 @@ export default function App() {
     textSpan.innerText = log.text;
     lineDiv.appendChild(textSpan);
 
+    if (log.text.startsWith('[NRF_LINK]')) {
+        const parts = log.text.split(' ');
+        if (parts.length >= 4) {
+            const role = parts[1].split(':')[1];
+            if (role === 'MASTER') {
+                const tx = parseInt(parts[2].split(':')[1]) || 0;
+                const ok = parseInt(parts[3].split(':')[1]) || 0;
+                const lat = parseInt(parts[4].split(':')[1]) || 0;
+                const best = parseInt(parts[5].split(':')[1]) || 0;
+                setNrfTelemetry({ role: 'MASTER', tx, ok, lat, best, rx: 0, seq: 0, time: Date.now() });
+            } else if (role === 'SLAVE') {
+                const rx = parseInt(parts[2].split(':')[1]) || 0;
+                const ack = parseInt(parts[3].split(':')[1]) || 0;
+                const seq = parseInt(parts[4].split(':')[1]) || 0;
+                setNrfTelemetry({ role: 'SLAVE', rx, ok: ack, seq, tx: 0, lat: 0, best: 0, time: Date.now() });
+            }
+        }
+    }
+
     viewport.insertBefore(lineDiv, anchor);
     lineCountRef.current++;
 
@@ -130,6 +150,7 @@ export default function App() {
   
   const [displayColor, setDisplayColor] = useState('#00ffff');
   const [displayColorRgb, setDisplayColorRgb] = useState('0, 255, 255');
+  const [nrfTelemetry, setNrfTelemetry] = useState<NrfTelemetry | null>(null);
   const [brightness, setBrightness] = useState(80);
   const [logLevel, setLogLevel] = useState<'INFO' | 'DEBUG' | 'WARN' | 'ERROR'>('INFO');
   const [isLogsPaused, setIsLogsPaused] = useState(false);
@@ -313,7 +334,7 @@ export default function App() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold font-sans tracking-tight uppercase text-zinc-100">
-                BWifiKill
+                TetraX
               </h1>
               <span className="text-[10px] font-mono border border-zinc-800 font-bold bg-zinc-900 text-zinc-300 rounded px-1.5 py-0.5">
                 V4.0
@@ -433,6 +454,9 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* RF VISUALIZER (Only shown when NRF LINK logs are active) */}
+      {nrfTelemetry && <RFVisualizer telemetry={nrfTelemetry} />}
 
       {/* THREE COLUMN MAIN SECTION */}
       <main className="flex flex-col lg:flex-row gap-4 flex-1 overflow-hidden min-h-0 h-full max-h-full mb-4">

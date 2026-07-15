@@ -1,4 +1,4 @@
-/* ═══ BWifiKill V4 — Companion Terminal Script ═══ */
+/* ═══ TetraX V4 — Companion Terminal Script ═══ */
 
 const term   = document.getElementById('terminal');
 const canvas = document.getElementById('oledCanvas');
@@ -16,6 +16,10 @@ let isPaused    = false;
 let frameBuffer    = '';
 let receivingFrame = false;
 let lastDecodedBinary = null;
+let currentSeq = -1;
+let watchdogTimer = null;
+let fpsInterval = null;
+let framesThisSec = 0;
 
 // Default OLED tint: #00FFFB
 let currentTint = { r: 0, g: 255, b: 251 };
@@ -135,6 +139,7 @@ document.getElementById('btnConnect').addEventListener('click', async () => {
     try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
+        try { await port.setSignals({ dataTerminalReady: false, requestToSend: false }); } catch (e) {}
 
         const enc = new TextEncoderStream();
         outputStream = enc.writable;
@@ -215,13 +220,33 @@ function triggerLed(type) {
     }
 }
 
+// ─── WATCHDOG ───
+function resetWatchdog() {
+    clearTimeout(watchdogTimer);
+    watchdogTimer = setTimeout(() => {
+        if (isConnected) {
+            updateStatus('TIMEOUT');
+            appendTerminal('[WARN] Serial heartbeat lost > 3s', 'log-warn');
+        }
+    }, 3000);
+}
+
 // ─── READ LOOP ───
 async function readLoop() {
     let partial = '';
+
+    if (fpsInterval) clearInterval(fpsInterval);
+    fpsInterval = setInterval(() => {
+        const fpsEl = document.getElementById('fpsCounter');
+        if (fpsEl) fpsEl.innerText = framesThisSec + ' FPS';
+        framesThisSec = 0;
+    }, 1000);
+
     while (isConnected) {
         try {
             const { value, done } = await reader.read();
             if (done) break;
+            resetWatchdog();
             partial += value;
             const lines = partial.split(/\r?\n/);
             partial = lines.pop();
@@ -245,11 +270,14 @@ async function readLoop() {
                 if (line === '[IR_TX_STOP]') { setIrTx(false); continue; }
                 if (line === '[IR_RX]') { triggerLed('rx'); continue; }
 
-                if (line === '[MIRROR] START') {
+                if (line === '[MIRROR] START' || line === '[MIRROR]') {
                     receivingFrame = true; frameBuffer = '';
-                } else if (line === '[MIRROR] END') {
+                } else if (line === '[MIRROR] END' || line === '[END]') {
                     receivingFrame = false;
                     decodeAndRender(frameBuffer);
+                    framesThisSec++;
+                } else if (receivingFrame && line.startsWith('SEQ:')) {
+                    currentSeq = parseInt(line.substring(4), 10);
                 } else if (receivingFrame && line.startsWith('FRAME:')) {
                     frameBuffer += line.substring(6);
                 } else {

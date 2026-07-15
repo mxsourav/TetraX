@@ -2,12 +2,10 @@
 #include "oled_mirror.h"
 #include "input_manager.h"
 #include "ui_theme.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include <WiFi.h>
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 static const uint16_t MASTER_SEND_MS = 550;
@@ -42,7 +40,6 @@ struct LinkReply {
 static LinkScreen screen = LINK_ROLE_SELECT;
 static uint8_t roleSelection = 0;
 static uint8_t fieldSelection = 0;
-static uint8_t radioSelection = 1;
 static uint8_t channelSelection = 4;
 static bool radioReady = false;
 static bool masterWaiting = false;
@@ -62,14 +59,6 @@ static bool radioBeginOk = false;
 static bool lastWriteOk = false;
 static uint32_t lastDrawMs = 0;
 static uint8_t frameTick = 0;
-
-static RF24& linkRadio() {
-    return radioSelection == 0 ? jam1 : jam2;
-}
-
-static RF24& idleRadio() {
-    return radioSelection == 0 ? jam2 : jam1;
-}
 
 static uint8_t selectedChannel() {
     return LINK_CHANNELS[channelSelection];
@@ -94,46 +83,38 @@ static void resetStats() {
 
 static void configureBaseRadio() {
     WiFi.mode(WIFI_OFF);
-    jam1.stopConstCarrier();
-    jam2.stopConstCarrier();
-    jam1.stopListening();
-    jam2.stopListening();
+    activeRadio->stopConstCarrier();
+    activeRadio->stopListening();
 
-    RF24& radio = linkRadio();
-    RF24& idle = idleRadio();
-    idle.powerDown();
-
-    radioBeginOk = radio.begin();
-    radio.powerDown();
+    radioBeginOk = activeRadio->begin();
+    activeRadio->powerDown();
     delay(5);
-    radio.powerUp();
-    radio.setAddressWidth(5);
-    radio.setAutoAck(false);
-    radio.setRetries(0, 0);
-    radio.setPayloadSize(sizeof(LinkPacket));
-    radio.setChannel(selectedChannel());
-    radio.setDataRate(RF24_250KBPS);
-    radio.setPALevel(RF24_PA_HIGH);
-    radio.setCRCLength(RF24_CRC_16);
-    radio.flush_rx();
-    radio.flush_tx();
+    activeRadio->powerUp();
+    activeRadio->setAddressWidth(5);
+    activeRadio->setAutoAck(false);
+    activeRadio->setRetries(0, 0);
+    activeRadio->setPayloadSize(sizeof(LinkPacket));
+    activeRadio->setChannel(selectedChannel());
+    activeRadio->setDataRate(RF24_250KBPS);
+    activeRadio->setPALevel(RF24_PA_HIGH);
+    activeRadio->setCRCLength(RF24_CRC_16);
+    activeRadio->flush_rx();
+    activeRadio->flush_tx();
 }
 
 static void startMasterRadio() {
     configureBaseRadio();
-    RF24& radio = linkRadio();
-    radio.stopListening();
-    radio.openWritingPipe(ADDR_SLAVE);
-    radio.openReadingPipe(1, ADDR_MASTER);
+    activeRadio->stopListening();
+    activeRadio->openWritingPipe(ADDR_SLAVE);
+    activeRadio->openReadingPipe(1, ADDR_MASTER);
     radioReady = true;
 }
 
 static void startSlaveRadio() {
     configureBaseRadio();
-    RF24& radio = linkRadio();
-    radio.openWritingPipe(ADDR_MASTER);
-    radio.openReadingPipe(1, ADDR_SLAVE);
-    radio.startListening();
+    activeRadio->openWritingPipe(ADDR_MASTER);
+    activeRadio->openReadingPipe(1, ADDR_SLAVE);
+    activeRadio->startListening();
     radioReady = true;
 }
 
@@ -141,16 +122,14 @@ static void drawRoleSelect() {
     UiTheme::drawHeader(u8g2, "NRF LINK", "SET");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    const char* role = roleSelection == 0 ? "MAESTRO" : "ESCLAVO";
-    char radio[8];
+    const char* role = roleSelection == 0 ? "MAESTRO" : "SLAVE";
     char channel[8];
-    snprintf(radio, sizeof(radio), "NRF%u", radioSelection + 1);
     snprintf(channel, sizeof(channel), "CH%u", selectedChannel());
 
-    const char* labels[] = {"ROL", "RADIO", "CANAL"};
-    const char* values[] = {role, radio, channel};
+    const char* labels[] = {"ROL", "CANAL"};
+    const char* values[] = {role, channel};
 
-    for (uint8_t i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < 2; i++) {
         int y = 25 + i * 12;
         int x = 8;
         int w = 112;
@@ -164,7 +143,7 @@ static void drawRoleSelect() {
     }
 
     u8g2.drawHLine(10, 59, 108);
-    uint8_t markerX = 22 + fieldSelection * 42;
+    uint8_t markerX = 32 + fieldSelection * 52;
     u8g2.drawBox(markerX, 57, 8, 4);
 }
 
@@ -200,7 +179,7 @@ static void drawLinkWave(int x, int y, bool active) {
 
 static void drawMaster() {
     char status[12];
-    snprintf(status, sizeof(status), radioBeginOk ? "%u%% R%u" : "RF ERR", linkQuality(), radioSelection + 1);
+    snprintf(status, sizeof(status), radioBeginOk ? "%u%%" : "RF ERR", linkQuality());
     UiTheme::drawHeader(u8g2, "NRF MASTER", status);
 
     u8g2.setFont(u8g2_font_5x7_tr);
@@ -226,7 +205,7 @@ static void drawSlave() {
     char status[12];
     uint32_t age = lastRxMs == 0 ? 9999 : (millis() - lastRxMs);
     if (radioBeginOk) {
-        snprintf(status, sizeof(status), "%s R%u", age < 1000 ? "ON" : "WAIT", radioSelection + 1);
+        snprintf(status, sizeof(status), "%s", age < 1000 ? "ON" : "WAIT");
     } else {
         snprintf(status, sizeof(status), "RF ERR");
     }
@@ -246,34 +225,35 @@ static void drawSlave() {
     drawLinkWave(64, 57, age < 600);
 }
 
+// Half-duplex TX: stop listening, transmit ping, then resume listening for reply
 static void sendMasterPing() {
-    RF24& radio = linkRadio();
     LinkPacket pkt;
     pkt.magic = 0xB4;
     pkt.type = 1;
     pkt.seq = ++txSeq;
     pkt.uptime = millis();
 
-    radio.stopListening();
-    radio.flush_tx();
-    radio.openWritingPipe(ADDR_SLAVE);
-    lastWriteOk = radio.write(&pkt, sizeof(pkt));
+    activeRadio->stopListening();
+    activeRadio->flush_tx();
+    activeRadio->openWritingPipe(ADDR_SLAVE);
+    lastWriteOk = activeRadio->write(&pkt, sizeof(pkt));
     sentCount++;
     waitStartMs = millis();
     masterWaiting = true;
-    radio.openReadingPipe(1, ADDR_MASTER);
-    radio.flush_rx();
-    radio.startListening();
+    activeRadio->openReadingPipe(1, ADDR_MASTER);
+    activeRadio->flush_rx();
+    activeRadio->startListening();
 
+    // Timed RX window for ACK
     uint32_t deadline = waitStartMs + MASTER_WAIT_MS;
     while ((int32_t)(millis() - deadline) < 0) {
-        if (!radio.available()) {
+        if (!activeRadio->available()) {
             delayMicroseconds(150);
             continue;
         }
 
         LinkReply reply;
-        radio.read(&reply, sizeof(reply));
+        activeRadio->read(&reply, sizeof(reply));
         if (reply.magic == 0xB4 && reply.type == 2 &&
             (reply.seq == txSeq || reply.seq != lastReplySeq)) {
             okCount++;
@@ -285,17 +265,16 @@ static void sendMasterPing() {
             }
             lastRxMs = now;
             masterWaiting = false;
-            radio.stopListening();
+            activeRadio->stopListening();
             return;
         }
     }
 
     masterWaiting = false;
-    radio.stopListening();
+    activeRadio->stopListening();
 }
 
 static void serviceMaster() {
-    RF24& radio = linkRadio();
     uint32_t now = millis();
     if (!masterWaiting && now - lastSendMs >= MASTER_SEND_MS) {
         lastSendMs = now;
@@ -303,9 +282,9 @@ static void serviceMaster() {
         return;
     }
 
-    if (masterWaiting && radio.available()) {
+    if (masterWaiting && activeRadio->available()) {
         LinkReply reply;
-        radio.read(&reply, sizeof(reply));
+        activeRadio->read(&reply, sizeof(reply));
         if (reply.magic == 0xB4 && reply.type == 2) {
             if (reply.seq == txSeq || reply.seq != lastReplySeq) {
                 okCount++;
@@ -318,21 +297,21 @@ static void serviceMaster() {
             }
         }
         masterWaiting = false;
-        radio.stopListening();
+        activeRadio->stopListening();
     }
 
     if (masterWaiting && now - waitStartMs > MASTER_WAIT_MS) {
         masterWaiting = false;
-        radio.stopListening();
+        activeRadio->stopListening();
     }
 }
 
+// Half-duplex RX: receive packet, switch to TX to send reply, then back to RX
 static void serviceSlave() {
-    RF24& radio = linkRadio();
-    if (!radio.available()) return;
+    if (!activeRadio->available()) return;
 
     LinkPacket pkt;
-    radio.read(&pkt, sizeof(pkt));
+    activeRadio->read(&pkt, sizeof(pkt));
     if (pkt.magic != 0xB4 || pkt.type != 1) return;
 
     rxCount++;
@@ -346,29 +325,28 @@ static void serviceSlave() {
     reply.slaveUptime = millis();
 
     delayMicroseconds(SLAVE_REPLY_DELAY_US);
-    radio.stopListening();
-    radio.flush_tx();
-    radio.openWritingPipe(ADDR_MASTER);
-    if (radio.write(&reply, sizeof(reply))) {
+    activeRadio->stopListening();
+    activeRadio->flush_tx();
+    activeRadio->openWritingPipe(ADDR_MASTER);
+    if (activeRadio->write(&reply, sizeof(reply))) {
         replyCount++;
     }
-    radio.openReadingPipe(1, ADDR_SLAVE);
-    radio.flush_rx();
-    radio.startListening();
+    activeRadio->openReadingPipe(1, ADDR_SLAVE);
+    activeRadio->flush_rx();
+    activeRadio->startListening();
 }
 
 static void serviceSlaveBurst() {
     uint32_t start = millis();
     do {
         serviceSlave();
-    } while (millis() - start < 4 && linkRadio().available());
+    } while (millis() - start < 4 && activeRadio->available());
 }
 
 void nrfLinkEnter() {
     screen = LINK_ROLE_SELECT;
     roleSelection = 0;
     fieldSelection = 0;
-    radioSelection = 1;
     channelSelection = 4;
     radioReady = false;
     frameTick = 0;
@@ -379,10 +357,8 @@ void nrfLinkEnter() {
 }
 
 void nrfLinkExit() {
-    jam1.stopListening();
-    jam2.stopListening();
-    jam1.powerDown();
-    jam2.powerDown();
+    activeRadio->stopListening();
+    activeRadio->powerDown();
     radioReady = false;
     screen = LINK_ROLE_SELECT;
     resetStats();
@@ -395,8 +371,6 @@ void nrfLinkLoop() {
         if (Input.repeating(BTN_ID_UP)) {
             if (fieldSelection == 0) {
                 roleSelection = roleSelection == 0 ? 1 : 0;
-            } else if (fieldSelection == 1) {
-                radioSelection = radioSelection == 0 ? 1 : 0;
             } else {
                 channelSelection = (channelSelection + 1) % (sizeof(LINK_CHANNELS) / sizeof(LINK_CHANNELS[0]));
             }
@@ -404,15 +378,13 @@ void nrfLinkLoop() {
         if (Input.repeating(BTN_ID_DOWN)) {
             if (fieldSelection == 0) {
                 roleSelection = roleSelection == 0 ? 1 : 0;
-            } else if (fieldSelection == 1) {
-                radioSelection = radioSelection == 0 ? 1 : 0;
             } else {
                 uint8_t count = sizeof(LINK_CHANNELS) / sizeof(LINK_CHANNELS[0]);
                 channelSelection = (channelSelection + count - 1) % count;
             }
         }
         if (Input.pressed(BTN_ID_AUX)) {
-            fieldSelection = (fieldSelection + 1) % 3;
+            fieldSelection = (fieldSelection + 1) % 2;
             Input.consume(BTN_ID_AUX);
         }
         if (Input.pressed(BTN_ID_OK)) {
@@ -444,12 +416,16 @@ void nrfLinkLoop() {
         screen == LINK_MASTER ? startMasterRadio() : startSlaveRadio();
     }
 
+    // NRF recovery check
+    safeNrfRecovery(activeRadio, 0, false);
+
     if (screen == LINK_MASTER) {
         serviceMaster();
         if (shouldDrawNow()) {
             u8g2.clearBuffer();
             drawMaster();
             u8g2.sendBuffer(); oledMirrorSync();
+            Serial.printf("[NRF_LINK] ROLE:MASTER TX:%lu OK:%lu LAT:%lu BEST:%lu\n", sentCount, okCount, lastLatencyMs, bestLatencyMs);
         }
     } else {
         serviceSlaveBurst();
@@ -457,6 +433,7 @@ void nrfLinkLoop() {
             u8g2.clearBuffer();
             drawSlave();
             u8g2.sendBuffer(); oledMirrorSync();
+            Serial.printf("[NRF_LINK] ROLE:SLAVE RX:%lu ACK:%lu SEQ:%u\n", rxCount, replyCount, lastRxSeq);
         }
     }
 }

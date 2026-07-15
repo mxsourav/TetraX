@@ -1,6 +1,6 @@
-Abre PowerShell y ejecuta este comando (reemplaza PepeAngell con tu usuario si aplica —
+Abre PowerShell y ejecuta este comando (reemplaza mx_sourav con tu usuario si aplica —
 
-C:\Users\PepeAngell\.platformio\packages\toolchain-xtensa-esp32\bin\xtensa-esp32-elf-objcopy.exe --weaken-symbol=ieee80211_raw_frame_sanity_check C:\Users\PepeAngell\.platformio\packages\framework-arduinoespressif32\tools\sdk\esp32\lib\libnet80211.a C:\Users\PepeAngell\.platformio\packages\framework-arduinoespressif32\tools\sdk\esp32\lib\libnet80211.a
+C:\Users\mx_sourav\.platformio\packages\toolchain-xtensa-esp32\bin\xtensa-esp32-elf-objcopy.exe --weaken-symbol=ieee80211_raw_frame_sanity_check C:\Users\mx_sourav\.platformio\packages\framework-arduinoespressif32\tools\sdk\esp32\lib\libnet80211.a C:\Users\mx_sourav\.platformio\packages\framework-arduinoespressif32\tools\sdk\esp32\lib\libnet80211.a
 
 
 

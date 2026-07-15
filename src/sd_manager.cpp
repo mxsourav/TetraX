@@ -11,8 +11,6 @@ void SDManager::acquireSPI() {
     // Disable NRF modules first
     pinMode(AppConfig::NRF1_CSN, OUTPUT);
     digitalWrite(AppConfig::NRF1_CSN, HIGH);
-    pinMode(AppConfig::NRF2_CSN, OUTPUT);
-    digitalWrite(AppConfig::NRF2_CSN, HIGH);
     
     // SPI belongs to SD now
     Serial.println("[SPI_OWNER] SD");
@@ -74,7 +72,7 @@ bool SDManager::runIsolatedTest() {
         releaseSPI();
         return false;
     }
-    if (!file.println("BWifiKill V4 SD Test OK")) {
+    if (!file.println("TetraX V4 SD Test OK")) {
         Serial.println("[SDManager] ERROR: Write failed.");
         file.close();
         releaseSPI();
@@ -96,7 +94,7 @@ bool SDManager::runIsolatedTest() {
     String content = file.readStringUntil('\n');
     file.close();
 
-    if (content.indexOf("BWifiKill V4 SD Test OK") >= 0) {
+    if (content.indexOf("TetraX V4 SD Test OK") >= 0) {
         Serial.println("[SDManager] Read test passed.");
         
         // Clean up

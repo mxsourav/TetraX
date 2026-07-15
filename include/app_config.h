@@ -14,10 +14,11 @@ namespace AppConfig {
 
     // ---------- Botones ----------
     constexpr uint8_t  BTN_UP    = 26;
-    constexpr uint8_t  BTN_DOWN  = 33;
+    constexpr uint8_t  BTN_DOWN  = 27;
     constexpr uint8_t  BTN_OK    = 32;
     constexpr uint8_t  BTN_BACK  = 25;
-    constexpr uint8_t  BTN_AUX   = 27;   // El que llamabas BTN27
+    constexpr uint8_t  BTN_AUX   = 33;
+    constexpr uint8_t  BUZZER_PIN = 4;   // Active Buzzer
 
     // ---------- I2C / Display ----------
     constexpr uint8_t  I2C_SDA   = 21;
@@ -28,9 +29,11 @@ namespace AppConfig {
     // ---------- nRF24 (VSPI) ----------
     constexpr uint8_t  NRF1_CE   = 5;
     constexpr uint8_t  NRF1_CSN  = 17;
-    constexpr uint8_t  NRF2_CE   = 16;
-    constexpr uint8_t  NRF2_CSN  = 4;
     constexpr uint32_t NRF_SPI_HZ = 16000000;
+
+    // ---------- Slave UART ----------
+    constexpr uint8_t  SLAVE_TX  = 16;
+    constexpr uint8_t  SLAVE_RX  = 14;
 
     // ---------- SD Card (Shared VSPI) ----------
     constexpr uint8_t  SD_CS     = 13;
@@ -40,21 +43,21 @@ namespace AppConfig {
     constexpr uint8_t  IR_RX_PIN = 35; // Input-only pin is fine
 
     // ---------- Firmware / Identidad ----------
-    constexpr const char* FIRMWARE_NAME    = "BWifiKill";
+    constexpr const char* FIRMWARE_NAME    = "TetraX";
     constexpr const char* FIRMWARE_VERSION = "V4.0";
     constexpr const char* BUILD_LABEL      = "V4 Visual";
     constexpr const char* BOARD_NAME       = "ESP32 DevKit";
-    constexpr const char* DEV_HANDLE       = "PepeAngell";
+    constexpr const char* DEV_HANDLE       = "MX 100RAV";
 
     // ---------- AP del Web Dashboard ----------
-    constexpr const char* WEB_AP_SSID      = "BWifiKill_V4";
-    constexpr const char* WEB_AP_PASSWORD  = "bwifikill40";
+    constexpr const char* WEB_AP_SSID      = "TetraX_V4";
+    constexpr const char* WEB_AP_PASSWORD  = "tetrax40";
     constexpr const char* WEB_AP_IP        = "192.168.4.1";
     constexpr uint16_t    WEB_PORT         = 80;
 
     // ---------- Redes sociales (About) ----------
-    constexpr const char* SOCIAL_INSTAGRAM = "pepeangelll";
-    constexpr const char* SOCIAL_GITHUB    = "pepeangell5";
+    constexpr const char* SOCIAL_INSTAGRAM = "mxsouravl";
+    constexpr const char* SOCIAL_GITHUB    = "mxsourav5";
     constexpr const char* SOCIAL_FACEBOOK  = "esp32tools";
 
     // ---------- Input timings (ms) ----------

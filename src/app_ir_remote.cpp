@@ -232,7 +232,9 @@ void irRemoteLoop() {
             else selectedButton = 0;
         }
         
-        if (Input.repeating(BTN_ID_OK)) {
+        static uint32_t lastTxTime = 0;
+        if (Input.repeating(BTN_ID_OK) && (millis() - lastTxTime > 250)) {
+            lastTxTime = millis();
             bool success = false;
             if (selectedType == 0) {
                 success = IRManager::getInstance().transmitTvCommand(selectedBrand, selectedButton);

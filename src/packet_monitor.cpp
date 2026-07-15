@@ -3,8 +3,9 @@
 #include "ui_theme.h"
 #include "app_config.h"
 #include "input_manager.h"
-#include <WiFi.h>
+#include "buzzer_manager.h"
 #include <esp_wifi.h>
+#include "wifi_helper.h"
 #include <U8g2lib.h>
 
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
@@ -136,8 +137,7 @@ static void drawStatsLine() {
 // =============================================================
 
 void monitorSetup() {
-    WiFi.mode(WIFI_STA);
-    esp_wifi_set_promiscuous(true);
+    WifiHelper::setupPromiscuous();
     esp_wifi_set_promiscuous_rx_cb(&sniffer_callback);
     esp_wifi_set_channel(target_channel, WIFI_SECOND_CHAN_NONE);
 
@@ -151,8 +151,8 @@ void monitorSetup() {
 void monitorEnter() { monitorSetup(); }
 
 void monitorExit() {
-    esp_wifi_set_promiscuous(false);
-    WiFi.mode(WIFI_OFF);
+    esp_wifi_set_promiscuous_rx_cb(nullptr);
+    WifiHelper::teardownPromiscuous();
     clearHistory();
     clearDots();
     resetCounters();
@@ -191,6 +191,10 @@ void monitorLoop() {
 
         // Spawn flujo
         spawnDots(totalPackets, dataPackets);
+
+        if (totalPackets > 0) {
+            BuzzerManager::beep(2, 1);
+        }
 
         // Historial: shift y agregar nueva entrada al final
         for (int i = 0; i < 127; i++) history[i] = history[i + 1];

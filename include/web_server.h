@@ -13,7 +13,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <meta charset='UTF-8'>
-  <title>BWifiKill Terminal</title>
+  <title>TetraX Terminal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: 'Courier New', monospace; background-color: #0d0d0d; color: #00ff00; padding: 20px; margin: 0; }
@@ -47,7 +47,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body onload="fetchLogs()">
-  <h1>⚡ BWifiKill Dashboard</h1>
+  <h1>⚡ TetraX Dashboard</h1>
   <div class="card">
     <div id="log-container">Cargando base de datos...</div>
     
@@ -57,7 +57,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     
     <button class="btn btn-clear" onclick="clearLogs()">BORRAR TODO (LIMPIAR ESP32)</button>
   </div>
-  <footer>Admin: PepeAngell | v4.0</footer>
+  <footer>Admin: MX 100RAV | v4.0</footer>
 </body>
 </html>)rawliteral";
 

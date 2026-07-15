@@ -1,4 +1,5 @@
 #include "input_manager.h"
+#include "buzzer_manager.h"
 #undef digitalRead
 
 InputManager Input;
@@ -28,7 +29,7 @@ void InputManager::begin() {
     }
 }
 
-void InputManager::update() {
+void InputManager::update(bool fromHijack) {
     const uint32_t now = millis();
 
     for (uint8_t i = 0; i < BTN_COUNT; i++) {
@@ -40,41 +41,44 @@ void InputManager::update() {
             raw |= (::digitalRead(PINS[i]) == LOW);
         }
 
-        if (raw != rawPrev[i]) {
-            lastEdgeMs[i] = now;
-            rawPrev[i]    = raw;
-        }
+        // Only process changes if debounce time has passed since the last ACCEPTED state change
+        if ((now - lastEdgeMs[i]) >= AppConfig::INPUT_DEBOUNCE_MS) {
+            if (raw != stableState[i]) {
+                stableState[i] = raw;
+                lastEdgeMs[i] = now; // Lock out further changes for DEBOUNCE_MS
 
-        const bool stableElapsed = (now - lastEdgeMs[i]) >= AppConfig::INPUT_DEBOUNCE_MS;
-
-        if (stableElapsed && raw != stableState[i]) {
-            stableState[i] = raw;
-
-            if (raw) {
-                events[i] = EVT_PRESSED;
-                pressStartMs[i] = now;
-                lastRepeatMs[i] = now;
-                longFired[i]    = false;
-                
-
-            } else {
-                events[i] = EVT_RELEASED;
-                
-                if (i == BTN_ID_BACK) {
-                    if (!comboUsed) {
-                        Serial.println("[MODIFIER] BACK released without combo. Triggering CANCEL.");
-                        cancelFlag = true;
-                        events[BTN_ID_BACK] = EVT_PRESSED;
-                    } else {
-                        Serial.println("[MODIFIER] BACK released WITH combo. Suppressed.");
-                    }
-                    comboUsed = false;
+                bool isIgnored = (_idleMode && i != BTN_ID_OK);
+                if (isIgnored) {
+                    continue; // Skip event triggering and beeps for ignored buttons
                 }
+
+                if (raw) {
+                    events[i] = EVT_PRESSED;
+                    pressStartMs[i] = now;
+                    lastRepeatMs[i] = now;
+                    longFired[i]    = false;
+                    
+                    BuzzerManager::beep(5); // Shortest possible beep
+                } else {
+                    events[i] = EVT_RELEASED;
+                    
+                    if (i == BTN_ID_BACK) {
+                        if (!comboUsed) {
+                            Serial.println("[MODIFIER] BACK released without combo. Triggering CANCEL.");
+                            cancelFlag = true;
+                            events[BTN_ID_BACK] = EVT_PRESSED;
+                        } else {
+                            Serial.println("[MODIFIER] BACK released WITH combo. Suppressed.");
+                        }
+                        comboUsed = false;
+                    }
+                }
+                continue;
             }
-            continue;
         }
 
-        if (stableState[i]) {
+        bool isIgnored = (_idleMode && i != BTN_ID_OK);
+        if (stableState[i] && !isIgnored) {
             const uint32_t holdMs = now - pressStartMs[i];
 
             if (!longFired[i] && holdMs >= AppConfig::INPUT_LONG_PRESS_MS) {

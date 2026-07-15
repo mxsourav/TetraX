@@ -2,13 +2,13 @@
 #include "oled_mirror.h"
 #include <WiFi.h>
 #include <esp_wifi.h>
-#include <RF24.h>
+#include "wifi_helper.h"
 #include <U8g2lib.h>
 #include "hybrid_attack.h"
 #include "ui_theme.h"
+#include "nrf_helper.h"
 
 extern bool isHybridActive;
-extern RF24 jam1; extern RF24 jam2;
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
 
 extern const char* ssids[];
@@ -29,7 +29,7 @@ uint8_t beacon_pkt[128] = {
 
 static void drawHybridIdle() {
     uint8_t frame = (millis() / 90) & 0xFF;
-    UiTheme::drawHeader(u8g2, "MODO HIBRIDO", "READY");
+    UiTheme::drawHeader(u8g2, "HYBRID MODE", "READY");
     u8g2.drawRFrame(11, 23, 106, 27, 3);
     u8g2.setFont(u8g2_font_6x10_tr);
     UiTheme::drawCenteredText(u8g2, 34, "SSID + RF + BT");
@@ -41,7 +41,7 @@ static void drawHybridIdle() {
 
 static void drawHybridArmed() {
     uint8_t frame = (millis() / 80) & 0xFF;
-    UiTheme::drawHeader(u8g2, "MODO HIBRIDO", "ON");
+    UiTheme::drawHeader(u8g2, "HYBRID MODE", "ON");
     for (int i = 0; i < 10; i++) {
         uint8_t h = 4 + ((frame + i * 4) % 18);
         u8g2.drawBox(20 + i * 9, 62 - h, 5, h);
@@ -56,20 +56,17 @@ void hybridAttackLoop() {
     if (digitalRead(32) == LOW) {
         isHybridActive = !isHybridActive;
         if (isHybridActive) {
-            WiFi.mode(WIFI_STA);
-            esp_wifi_set_promiscuous(true);
-            jam1.begin(); jam2.begin();
-            jam1.setDataRate(RF24_1MBPS); jam2.setDataRate(RF24_1MBPS);
-            jam1.startConstCarrier(RF24_PA_MAX, 40);
-            jam2.startConstCarrier(RF24_PA_MAX, 60);
+            WifiHelper::setupPromiscuous();
+            activeRadio->begin();
+            activeRadio->setDataRate(RF24_1MBPS);
+            activeRadio->startConstCarrier(RF24_PA_MAX, 40);
 
             u8g2.clearBuffer();
             drawHybridArmed();
             u8g2.sendBuffer(); oledMirrorSync();
         } else {
-            esp_wifi_set_promiscuous(false);
-            WiFi.mode(WIFI_OFF);
-            jam1.stopConstCarrier(); jam2.stopConstCarrier();
+            WifiHelper::teardownPromiscuous();
+            activeRadio->stopConstCarrier();
         }
         delay(400);
     }
@@ -98,17 +95,18 @@ void hybridAttackLoop() {
             beacon_pkt[pos++] = ch;
             esp_wifi_80211_tx(WIFI_IF_STA, beacon_pkt, pos, false);
 
-            jam1.setChannel(random(2, 40));
-            jam2.setChannel(random(41, 80));
+            // Single radio: fast hop across the band
+            activeRadio->setChannel(random(2, 80));
 
             if (digitalRead(25) == LOW) {
                 isHybridActive = false;
-                esp_wifi_set_promiscuous(false);
-                WiFi.mode(WIFI_OFF);
-                jam1.stopConstCarrier(); jam2.stopConstCarrier();
+                WifiHelper::teardownPromiscuous();
+                activeRadio->stopConstCarrier();
                 return;
             }
         }
+        // Periodic NRF recovery
+        safeNrfRecovery(activeRadio, 40, true);
     } else {
         u8g2.clearBuffer();
         drawHybridIdle();

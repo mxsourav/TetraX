@@ -150,7 +150,7 @@ static void drawConnectedView(uint8_t frame) {
     u8g2.drawBox(7, 20, 114, 10);
     u8g2.setDrawColor(0);
     u8g2.setFont(u8g2_font_5x7_tr);
-    UiTheme::drawCenteredText(u8g2, 28, "CONECTADO");
+    UiTheme::drawCenteredText(u8g2, 28, "CONNECTED");
     u8g2.setDrawColor(1);
 
     if (sub_menu_index == 0) {
@@ -171,7 +171,7 @@ static void drawSearchingView(uint8_t frame) {
     UiTheme::drawHeader(u8g2, "BT REMOTE", "SCAN");
     UiTheme::drawSpinner(u8g2, 64, 36, frame);
     u8g2.setFont(u8g2_font_6x10_tr);
-    UiTheme::drawCenteredText(u8g2, 56, "BUSCANDO PC");
+    UiTheme::drawCenteredText(u8g2, 56, "SEARCHING PC");
 }
 
 static void drawIphoneRemoteView(uint8_t frame) {
@@ -201,7 +201,7 @@ static void drawIphoneRemoteView(uint8_t frame) {
     }
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(6, 62, bleKeyboard.isConnected() ? "CONECTADO" : "BT: Wireless Kbd 3000");
+    u8g2.drawStr(6, 62, bleKeyboard.isConnected() ? "CONNECTED" : "BT: Wireless Kbd 3000");
     UiTheme::drawMiniWave(u8g2, 92, 62, frame);
 }
 
@@ -286,7 +286,7 @@ static void runWebSearch() {
     openIphoneApp("Safari");
     delay(700);
     sendShortcut('l');
-    typeIphoneText("instagram.com/pepeangelll");
+    typeIphoneText("instagram.com/mx_sourav");
     delay(180);
     bleKeyboard.write(KEY_RETURN);
     delay(650);
@@ -366,7 +366,7 @@ static void runNumericUnlock() {
 
 static void runIphoneAction(uint8_t action) {
     if (action == IPHONE_PAIR) {
-        showIphoneStatus(bleKeyboard.isConnected() ? "CONECTADO" : "EMPAREJAR", "Bluetooth del iPhone");
+        showIphoneStatus(bleKeyboard.isConnected() ? "CONNECTED" : "PAIR", "Bluetooth del iPhone");
         delay(900);
         return;
     }

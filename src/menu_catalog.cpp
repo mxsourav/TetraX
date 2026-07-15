@@ -5,7 +5,7 @@ static const uint8_t WIFI_APPS[] = {
     1,  // WIFI RADAR
     2,  // CHANNEL SCAN
     5,  // PACKET MONITOR
-    6,  // MODO CENTINELA
+    6,  // SENTINEL MODE
     14, // IP SCANNER
     16  // WEB DASHBOARD
 };
@@ -17,7 +17,7 @@ static const uint8_t RF_APPS[] = {
     25, // NRF LINK
     26, // NRF CHAT
     27, // BT/WIFI COEX
-    28  // DUAL NRF SCOPE
+    28  // RF SPECTRUM
 };
 
 static const uint8_t BLUETOOTH_APPS[] = {
@@ -32,7 +32,7 @@ static const uint8_t ILLEGAL_APPS[] = {
     9,  // BT JAMMER
     10, // BEACON SPAM
     11, // BLE SPAM (POP)
-    12, // MODO HIBRIDO
+    12, // HYBRID MODE
     13, // EVIL PORTAL
     29  // DEAUTHER
 };
@@ -42,7 +42,7 @@ static const uint8_t GAMES_APPS[] = {
 };
 
 static const uint8_t SYSTEM_APPS[] = {
-    15, // CONTROL ESCLAVO
+    15, // CONTROL SLAVE
     18, // LEER LOGS
     20  // ABOUT
 };
@@ -55,13 +55,13 @@ static const uint8_t IR_TOOLS_APPS[] = {
 };
 
 static const MenuCategory CATEGORIES[] = {
-    { "WIFI",      "scanner/radar/red", MENU_ICON_WIFI,      WIFI_APPS,      sizeof(WIFI_APPS) },
+    { "WIFI",      "scanner/radar/net", MENU_ICON_WIFI,      WIFI_APPS,      sizeof(WIFI_APPS) },
     { "RF TOOLS",  "nRF24 spectrum",    MENU_ICON_RF,        RF_APPS,        sizeof(RF_APPS) },
-    { "BLUETOOTH", "scan/remoto",       MENU_ICON_BLUETOOTH, BLUETOOTH_APPS, sizeof(BLUETOOTH_APPS) },
-    { "ILEGAL",    "zona de alerta",    MENU_ICON_WARNING,   ILLEGAL_APPS,   sizeof(ILLEGAL_APPS) },
+    { "BLUETOOTH", "scan/remote",       MENU_ICON_BLUETOOTH, BLUETOOTH_APPS, sizeof(BLUETOOTH_APPS) },
+    { "ILLEGAL",   "alert zone",        MENU_ICON_WARNING,   ILLEGAL_APPS,   sizeof(ILLEGAL_APPS) },
     { "GAMES",     "arcade",            MENU_ICON_GAMES,     GAMES_APPS,     sizeof(GAMES_APPS) },
     { "IR TOOLS",  "remote/rx/jam",     MENU_ICON_IR,        IR_TOOLS_APPS,  sizeof(IR_TOOLS_APPS) },
-    { "SISTEMA",   "tools/info",        MENU_ICON_SYSTEM,    SYSTEM_APPS,    sizeof(SYSTEM_APPS) }
+    { "SYSTEM",    "tools/info",        MENU_ICON_SYSTEM,    SYSTEM_APPS,    sizeof(SYSTEM_APPS) }
 };
 
 uint8_t menuCategoryCount() {

@@ -1,4 +1,5 @@
 #include "ip_scanner.h"
+#include "buzzer_manager.h"
 #include "oled_mirror.h"
 #include "ui_theme.h"
 #include "app_config.h"
@@ -158,7 +159,7 @@ void runPingAction(String ip) {
     u8g2.setCursor(10, 30);
     u8g2.print(success ? "RESPONDE: SI" : "RESPONDE: NO");
     u8g2.sendBuffer(); oledMirrorSync();
-    while (digitalRead(25) == HIGH);
+    while (digitalRead(25) == HIGH) { BuzzerManager::update(); delay(10); }
     delay(200);
 }
 
@@ -170,6 +171,7 @@ void runFloodAction(String ip) {
     u8g2.print(ip);
     u8g2.sendBuffer(); oledMirrorSync();
     while (digitalRead(25) == HIGH) {
+        BuzzerManager::update();
         udp.writeTo((uint8_t*)"SYSTEM_OVERLOAD", 15,
                     IPAddress().fromString(ip), 80);
         delay(1);
@@ -199,7 +201,7 @@ void runScanAction(String ip) {
     u8g2.setCursor(10, 40);
     u8g2.print(info);
     u8g2.sendBuffer(); oledMirrorSync();
-    while (digitalRead(25) == HIGH);
+    while (digitalRead(25) == HIGH) { BuzzerManager::update(); delay(10); }
     delay(200);
 }
 
@@ -286,7 +288,7 @@ static void drawWifiOpenScan(uint32_t elapsedMs) {
     }
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    const char* dots[] = { "BUSCANDO OPEN", "BUSCANDO OPEN.", "BUSCANDO OPEN..", "BUSCANDO OPEN..." };
+    const char* dots[] = { "SEARCHING OPEN", "SEARCHING OPEN.", "SEARCHING OPEN..", "SEARCHING OPEN..." };
     UiTheme::drawCenteredText(u8g2, 62, dots[(elapsedMs / 250) % 4]);
 }
 
@@ -297,7 +299,7 @@ static void drawOpenNetworkList() {
     UiTheme::drawHeader(u8g2, "CONECTAR WIFI", status);
 
     if (openCount == 0) {
-        UiTheme::drawToast(u8g2, "SIN REDES OPEN", "AUX = RESCAN");
+        UiTheme::drawToast(u8g2, "NO OPEN NETWORKS", "AUX = RESCAN");
         return;
     }
 
@@ -600,7 +602,10 @@ void ipScannerLoop() {
             }
         }
         current_scan_ip++;
-        if (current_scan_ip > 254) scanFinished = true;
+        if (current_scan_ip > 254) {
+            scanFinished = true;
+            BuzzerManager::beep(5, 2);
+        }
 
         drawScanGrid();
     } else {

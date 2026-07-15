@@ -1,11 +1,9 @@
 #include "total_jammer.h"
 #include "oled_mirror.h"
-#include <RF24.h>
+#include "nrf_helper.h"
 #include <U8g2lib.h>
 #include "ui_theme.h"
 
-extern RF24 jam1;
-extern RF24 jam2;
 extern U8G2 u8g2;
 extern bool isTotalAttacking;
 
@@ -42,49 +40,48 @@ static void drawTotalActive() {
 }
 
 void totalJammerSetup() {
-    jam1.begin(); jam2.begin();
-    jam1.setAutoAck(false);
-    jam1.setDataRate(RF24_2MBPS);
-    jam1.setCRCLength(RF24_CRC_DISABLED);
-    jam2.setAutoAck(false);
-    jam2.setDataRate(RF24_2MBPS);
-    jam2.setCRCLength(RF24_CRC_DISABLED);
+    activeRadio->begin();
+    activeRadio->setAutoAck(false);
+    activeRadio->setDataRate(RF24_2MBPS);
+    activeRadio->setCRCLength(RF24_CRC_DISABLED);
 }
 
 void totalJammerLoop() {
     if (digitalRead(BTN_OK) == LOW) {
         isTotalAttacking = !isTotalAttacking;
         if (!isTotalAttacking) {
-            jam1.stopConstCarrier();
-            jam2.stopConstCarrier();
+            activeRadio->stopConstCarrier();
         } else {
-            jam1.startConstCarrier(RF24_PA_MAX, 45);
-            jam2.startConstCarrier(RF24_PA_MAX, 45);
+            activeRadio->startConstCarrier(RF24_PA_MAX, 45);
         }
         delay(400);
     }
 
     if (digitalRead(BTN_BACK) == LOW) {
         isTotalAttacking = false;
-        jam1.stopConstCarrier();
-        jam2.stopConstCarrier();
+        activeRadio->stopConstCarrier();
         return;
     }
 
     if (isTotalAttacking) {
+        unsigned long lastRecovery = millis();
         while (isTotalAttacking) {
             for (int r = 0; r < 50; r++) {
                 for (int i = 0; i < total_chans; i++) {
-                    jam1.setChannel(full_hop_list[i]);
-                    jam2.setChannel(full_hop_list[total_chans - 1 - i]);
+                    activeRadio->setChannel(full_hop_list[i]);
                 }
 
                 if (digitalRead(BTN_OK) == LOW || digitalRead(BTN_BACK) == LOW) {
                     isTotalAttacking = false;
-                    jam1.stopConstCarrier();
-                    jam2.stopConstCarrier();
+                    activeRadio->stopConstCarrier();
                     return;
                 }
+            }
+
+            // NRF recovery check during aggressive hopping
+            if (millis() - lastRecovery > 2000) {
+                lastRecovery = millis();
+                safeNrfRecovery(activeRadio, 45, true);
             }
 
             u8g2.clearBuffer();

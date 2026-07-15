@@ -1,10 +1,10 @@
-# Binarios BWifiKill ESP32 V4.0
+# Binarios TetraX ESP32 V4.0
 
 Esta carpeta contiene los binarios listos para release.
 
 | Archivo | Uso |
 | --- | --- |
-| `BWifiKill-ESP32-V4.0-full.bin` | Binario completo para Web Flasher o `esptool.py` en offset `0x0`. |
+| `TetraX-ESP32-V4.0-full.bin` | Binario completo para Web Flasher o `esptool.py` en offset `0x0`. |
 | `firmware.bin` | Aplicacion principal generada por PlatformIO. |
 | `bootloader.bin` | Bootloader generado por PlatformIO. |
 | `partitions.bin` | Tabla de particiones usada por el build. |
@@ -13,5 +13,5 @@ Esta carpeta contiene los binarios listos para release.
 Flasheo manual recomendado:
 
 ```bash
-esptool.py --chip esp32 --baud 921600 write_flash 0x0 binarios/BWifiKill-ESP32-V4.0-full.bin
+esptool.py --chip esp32 --baud 921600 write_flash 0x0 binarios/TetraX-ESP32-V4.0-full.bin
 ```
