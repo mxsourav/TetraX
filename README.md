@@ -53,7 +53,7 @@ TetraX Firmware V4.0 — System Block Diagram
                    │                              │  └────────────┘  │   │
                    │  ┌───────────────────────┐   └──────────────────┘   │
                    │  │   UART0 (USB/Flash)   │                          │
-                   │  │   UART1 (Slave Link)  │                          │
+                   │  │   UART0 (Slave Link)  │                          │
                    │  └───────────────────────┘                          │
                    └─────────────────────────────────────────────────────┘
                           │          │           │           │
@@ -116,8 +116,14 @@ TetraX Firmware V4.0 — System Block Diagram
 
 | Feature | Technical Implementation | Use Case |
 |---|---|---|
-| **UART Slave Control** | Exposes a hardware UART (GPIO 16 TX / GPIO 14 RX) for external device coordination. The TetraX unit can operate as a headless slave module, receiving structured commands and returning status over serial. | Integration with external controllers (e.g., Flipper Zero, Bruce device), multi-device coordinated operations |
+| **UART Slave Control** | Exposes a hardware UART (GPIO 1 TX / GPIO 3 RX) for external device coordination. The TetraX unit can operate as a headless slave module, receiving structured commands and returning status over serial. | Integration with external controllers (e.g., Flipper Zero, Bruce device), multi-device coordinated operations |
 | **Slave Manager** | Protocol handler for incoming UART commands with state machine parsing, command validation, and response formatting. | Automated test orchestration, remote firmware triggering |
+
+### Web Dashboard & SATAN Interface
+
+TetraX can be monitored and controlled via two distinct interfaces:
+1. **Local SoftAP Dashboard**: Connect to the TetraX_V4 WiFi network and navigate to 192.168.4.1 for the local OLED mirror and basic controls.
+2. **SATAN UI Integration**: TetraX fully supports the **SATAN** (Security Analysis and Tactical Attack Network) web interface. You can access the advanced web controller at: **[espsatan.vercel.app](https://espsatan.vercel.app)**. Connect your TetraX to your PC via USB, open the SATAN web app in a WebSerial-compatible browser (like Chrome/Edge), and take full command of the hardware via the serial link.
 
 ### System Utilities
 
@@ -139,9 +145,9 @@ TetraX Firmware V4.0 — System Block Diagram
 | GPIO | Function | Direction | Protocol | Notes |
 |------|----------|-----------|----------|-------|
 | **0** | BOOT Button (External) | INPUT | Digital | Active LOW. Wire to external momentary switch + GND for firmware flashing from enclosure. Directly controls the ESP32 strapping pin — pulling LOW during power-on enters download mode. |
-| **1** | UART0 TX (USB Port) | OUTPUT | UART | Connected to external USB Female port for firmware flashing via USB-to-TTL converter. Active during Serial.begin(115200). Directly connects to the ESP32 native UART0 transmit line. |
+| **1** | UART0 TX / Slave TX | OUTPUT | UART | Shared pin for firmware flashing (via USB-to-TTL) and Master/Slave expansion protocol. |
 | **2** | IR Transmitter | OUTPUT | PWM/38KHz | Directly drives IR LED. This is an ESP32 strapping pin — firmware forces LOW immediately on boot to prevent phantom IR transmission during power-on. |
-| **3** | UART0 RX (USB Port) | INPUT | UART | Connected to external USB Female port. Receives data from USB-to-TTL converter during flashing and serial monitor. |
+| **3** | UART0 RX / Slave RX | INPUT | UART | Shared pin for firmware flashing (via USB-to-TTL) and Master/Slave expansion protocol. |
 | **4** | Buzzer | OUTPUT | Digital | Active buzzer, driven with 5ms synchronous pulses for tactile click feedback. |
 | **5** | NRF24 CE (Chip Enable) | OUTPUT | SPI/Digital | Controls the NRF24L01+ transmit/receive enable. Active HIGH to begin TX or enter RX mode. |
 | **13** | SD Card CS | OUTPUT | SPI (VSPI) | Directly drives the SD module CS. Directly shared with the NRF24 on the same VSPI bus. Bus arbitration handled in software. |

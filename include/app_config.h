@@ -32,8 +32,8 @@ namespace AppConfig {
     constexpr uint32_t NRF_SPI_HZ = 16000000;
 
     // ---------- Slave UART ----------
-    constexpr uint8_t  SLAVE_TX  = 16;
-    constexpr uint8_t  SLAVE_RX  = 14;
+    constexpr uint8_t  SLAVE_TX  = 1;
+    constexpr uint8_t  SLAVE_RX  = 3;
 
     // ---------- SD Card (Shared VSPI) ----------
     constexpr uint8_t  SD_CS     = 13;
