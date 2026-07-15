@@ -1,12 +1,12 @@
-# Graph Report - C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main  (2026-07-05)
+# Graph Report - C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main  (2026-07-15)
 
 ## Corpus Check
-- 156 files · ~4,911,755 words
+- 181 files · ~5,579,906 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 929 nodes · 1927 edges · 103 communities detected
-- Extraction: 74% EXTRACTED · 26% INFERRED · 0% AMBIGUOUS · INFERRED: 502 edges (avg confidence: 0.8)
+- 992 nodes · 2013 edges · 126 communities detected
+- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 534 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -113,160 +113,183 @@
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 101|Community 101]]
 - [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `oledMirrorSync()` - 80 edges
-2. `drawHeader()` - 76 edges
-3. `drawMenuIcon()` - 35 edges
-4. `pressed()` - 31 edges
-5. `begin()` - 30 edges
+1. `oledMirrorSync()` - 82 edges
+2. `drawHeader()` - 79 edges
+3. `pressed()` - 35 edges
+4. `drawMenuIcon()` - 35 edges
+5. `begin()` - 32 edges
 6. `drawCenteredText()` - 23 edges
-7. `resetAll()` - 18 edges
-8. `btSpectrumLoop()` - 16 edges
-9. `drawStringCustom()` - 16 edges
-10. `loop()` - 16 edges
+7. `resetAll()` - 19 edges
+8. `beep()` - 17 edges
+9. `loop()` - 17 edges
+10. `btSpectrumLoop()` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `irSdEnter()` --calls--> `stopReceive()`  [INFERRED]
-  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\app_ir_sd.cpp → C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\ir_manager.cpp
-- `setup()` --calls--> `registerApps()`  [INFERRED]
-  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\main.cpp → C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\app_lifecycle.cpp
 - `btJammerSetup()` --calls--> `begin()`  [INFERRED]
-  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\bt_jammer.cpp → C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\sd_manager.cpp
-- `deautherLoop()` --calls--> `runDeauther()`  [INFERRED]
-  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\main.cpp → C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\Deauther.cpp
+  C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\bt_jammer.cpp → C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\sd_manager.cpp
+- `centinela_sniffer_callback()` --calls--> `beep()`  [INFERRED]
+  C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\centinela.cpp → C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\Deauther.cpp
+- `runDeauther()` --calls--> `deautherLoop()`  [INFERRED]
+  C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\Deauther.cpp → C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\main.cpp
+- `gamesEnter()` --calls--> `resetAll()`  [INFERRED]
+  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\games_menu.cpp → C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\input_manager.cpp
 - `jammerSetup()` --calls--> `begin()`  [INFERRED]
-  C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\jammer.cpp → C:\Users\rodd\Desktop\TetraX-ESP32-V4.0-main\src\sd_manager.cpp
+  C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\jammer.cpp → C:\Users\rodd\Desktop\BWifiKill-ESP32-V4.0-main\src\sd_manager.cpp
 
 ## Communities
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
-Nodes (31): handleExport(), handleSaveSettings(), handleSend(), LLMProviderService, LocalStructuringEngineService, handleStream(), PanelRegistryService, SessionMemoryService (+23 more)
+Nodes (24): handleExport(), handleSaveSettings(), handleSend(), LLMProviderService, LocalStructuringEngineService, handleStream(), PanelRegistryService, SessionMemoryService (+16 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.07
-Nodes (53): runPepeScript(), type(), beaconSpamLoop(), drawBeaconActive(), drawBeaconIcon(), drawBeaconIdle(), btJammerLoop(), btJammerSetup() (+45 more)
+Cohesion: 0.06
+Nodes (59): runPepeScript(), type(), beaconSpamLoop(), drawBeaconActive(), drawBeaconIcon(), drawBeaconIdle(), btJammerLoop(), btJammerSetup() (+51 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.08
-Nodes (50): drawAlien(), drawBan(), drawBluetoothCategoryIcon(), drawBluetoothIcon(), drawBolt(), drawBruceMenu(), drawBtAnalyzerIcon(), drawBTJam() (+42 more)
+Nodes (51): drawAlien(), drawBan(), drawBluetoothCategoryIcon(), drawBolt(), drawBruceMenu(), drawBtAnalyzerIcon(), drawBTJam(), drawBtSpectrumIcon() (+43 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.15
-Nodes (39): beep(), clientSnifferCallback(), confirmRambo(), drawActionMenu(), drawAPList(), drawAttackFrame(), drawAttackStats(), drawClientList() (+31 more)
+Cohesion: 0.07
+Nodes (40): coexViewEnter(), dualNrfScopeEnter(), drawFallbackPicker(), drawPortalActiveHeader(), drawPortalPicker(), evilPortalLoop(), handleLogin(), saveToLog() (+32 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.09
-Nodes (35): drawActiveJammer(), drawModeSelect(), irJammerEnter(), irJammerExit(), irJammerLoop(), updateGraphData(), drawListening(), drawReceivedMenu() (+27 more)
+Cohesion: 0.08
+Nodes (37): drawActiveJammer(), drawModeSelect(), irJammerEnter(), irJammerExit(), irJammerLoop(), updateGraphData(), drawListening(), drawReceivedMenu() (+29 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.09
-Nodes (34): drawFallbackPicker(), drawPortalActiveHeader(), drawPortalPicker(), evilPortalLoop(), handleLogin(), saveToLog(), startJammer(), startPortal() (+26 more)
+Cohesion: 0.08
+Nodes (34): cancelRequested(), consume(), hijackedDigitalRead(), update(), beginOpenConnection(), buildOpenNetworkList(), drawConnectFailed(), drawConnectingOpenNetwork() (+26 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.09
-Nodes (32): AnalyzerCallbacks, avgRssi(), btAnalyzerEnter(), btAnalyzerLoop(), buildListSnapshot(), buildServiceLabel(), clearDeviceSlot(), containsToken() (+24 more)
+Cohesion: 0.14
+Nodes (40): beep(), clientSnifferCallback(), confirmRambo(), drawActionMenu(), drawAPList(), drawAttackFrame(), drawAttackStats(), drawClientList() (+32 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.09
-Nodes (32): aboutEnter(), aboutLoop(), drawAboutWindow(), drawMatrixBackground(), drawScrollRail(), initMatrix(), dinoLoop(), dinoSetup() (+24 more)
+Cohesion: 0.08
+Nodes (34): AnalyzerCallbacks, avgRssi(), btAnalyzerEnter(), btAnalyzerExit(), btAnalyzerLoop(), buildListSnapshot(), buildServiceLabel(), clearDeviceSlot() (+26 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.11
-Nodes (31): BtDeviceCallback, btscanExit(), btscanLoop(), btscanSetup(), companyName(), drawBtDetail(), drawBtResults(), drawDeviceRow() (+23 more)
+Nodes (32): BtDeviceCallback, btscanExit(), btscanLoop(), btscanSetup(), companyName(), drawBtDetail(), drawBtResults(), drawDeviceRow() (+24 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
-Nodes (26): beginOpenConnection(), buildOpenNetworkList(), drawConnectFailed(), drawConnectingOpenNetwork(), drawIPSubMenu(), drawOpenNetworkList(), drawResultList(), drawScanGrid() (+18 more)
+Nodes (25): dinoLoop(), dinoSetup(), drawCloud(), drawDino(), drawRealCactus(), drawBird(), drawCloud(), flappyLoop() (+17 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.09
-Nodes (24): launch(), registerApps(), shutdown(), tick(), cancelRequested(), consume(), hijackedDigitalRead(), injectVirtualState() (+16 more)
-
-### Community 11 - "Community 11"
 Cohesion: 0.13
 Nodes (28): appendLogChunk(), appendLogLine(), clearLogCache(), clearLogRows(), drawDeleteConfirm(), drawEmptyState(), drawLogActivity(), drawLogRows() (+20 more)
 
+### Community 11 - "Community 11"
+Cohesion: 0.12
+Nodes (24): launch(), registerApps(), shutdown(), tick(), injectVirtualState(), beginSession(), endSession(), deautherLoop() (+16 more)
+
 ### Community 12 - "Community 12"
-Cohesion: 0.15
-Nodes (25): irSdEnter(), irSdLoop(), beep(), bleSpamEnter(), drawAttackFrame(), drawAttackStats(), drawModeMenu(), drawOledFooter() (+17 more)
+Cohesion: 0.13
+Nodes (23): analyzeProfile(), channelAdvisorEnter(), channelAdvisorLoop(), drawAdvisor(), drawProfileBar(), insertNrfCandidate(), insertWifiCandidate(), nrfScore() (+15 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.12
 Nodes (16): clearLogs(), formatTime(), formatUptime(), handleColorWheelSelect(), handleConnect(), handleDisconnect(), handleDpadPress(), handleMouseDown() (+8 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.13
-Nodes (25): btAnalyzerExit(), btRemoteBleActive(), BtSpectrumBleCallbacks, btSpectrumEnter(), btSpectrumExit(), btSpectrumLoop(), buildChannelLut(), channelToX() (+17 more)
+Cohesion: 0.18
+Nodes (23): beep(), bleSpamEnter(), drawAttackFrame(), drawAttackStats(), drawModeMenu(), drawOledFooter(), drawOledRow(), fitOledText() (+15 more)
 
 ### Community 15 - "Community 15"
+Cohesion: 0.15
+Nodes (23): BtSpectrumBleCallbacks, btSpectrumEnter(), btSpectrumExit(), btSpectrumLoop(), buildChannelLut(), channelToX(), drawBlePulse(), drawEnergyBar() (+15 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.13
+Nodes (8): WorkspaceBuilderEngine, centerOf(), edges(), getOtherRects(), snapPosition(), snapResize(), snapToGrid(), validateSpacing()
+
+### Community 17 - "Community 17"
 Cohesion: 0.19
 Nodes (19): alreadyStored(), beginTargetTrack(), buildNetworkList(), copyBssid(), distanceLabel(), drawNetworkList(), drawNetworkRow(), drawRadarRings() (+11 more)
 
-### Community 16 - "Community 16"
+### Community 18 - "Community 18"
 Cohesion: 0.23
 Nodes (18): configureBaseRadio(), drawLinkWave(), drawMaster(), drawRoleSelect(), drawSlave(), linkQuality(), nrfLinkEnter(), nrfLinkExit() (+10 more)
 
-### Community 17 - "Community 17"
+### Community 19 - "Community 19"
 Cohesion: 0.27
 Nodes (17): configureRadio(), copyText(), drawChat(), drawMessageRow(), drawSetup(), nrfChatEnter(), nrfChatExit(), nrfChatLoop() (+9 more)
 
-### Community 18 - "Community 18"
-Cohesion: 0.23
-Nodes (12): appendTerminal(), decodeAndRender(), readLoop(), release(), renderFromBinary(), sendCmd(), setColor(), setIrTx() (+4 more)
-
-### Community 19 - "Community 19"
-Cohesion: 0.26
-Nodes (12): analyzeProfile(), channelAdvisorEnter(), channelAdvisorLoop(), drawAdvisor(), drawProfileBar(), insertNrfCandidate(), insertWifiCandidate(), nrfScore() (+4 more)
-
 ### Community 20 - "Community 20"
+Cohesion: 0.22
+Nodes (13): appendTerminal(), decodeAndRender(), readLoop(), release(), renderFromBinary(), resetWatchdog(), sendCmd(), setColor() (+5 more)
+
+### Community 21 - "Community 21"
 Cohesion: 0.29
 Nodes (12): clearDots(), clearHistory(), drawHistoryBars(), drawStatsLine(), monitorEnter(), monitorExit(), monitorLoop(), monitorSetup() (+4 more)
 
-### Community 21 - "Community 21"
-Cohesion: 0.21
-Nodes (1): WorkspaceBuilderEngine
-
 ### Community 22 - "Community 22"
-Cohesion: 0.31
-Nodes (11): bandAverage(), coexViewEnter(), coexViewLoop(), drawBleLane(), drawBleMarker(), drawCoexView(), drawLiveBars(), drawWifiBand() (+3 more)
-
-### Community 23 - "Community 23"
 Cohesion: 0.27
 Nodes (11): drawAlertOverlay(), drawBandMarkers(), drawCalibrationOverlay(), drawFloor(), drawHeader(), drawSpectrumBar(), scaleSample(), spectrographEnter() (+3 more)
 
-### Community 24 - "Community 24"
+### Community 23 - "Community 23"
 Cohesion: 0.27
-Nodes (8): centinelaLoop(), drawChannelDots(), drawChannelSelector(), drawHistory(), drawIntensityMeter(), drawMonitor(), runCentinelaSetup(), updateCounters()
+Nodes (9): centinela_sniffer_callback(), centinelaLoop(), drawChannelDots(), drawChannelSelector(), drawHistory(), drawIntensityMeter(), drawMonitor(), runCentinelaSetup() (+1 more)
 
-### Community 25 - "Community 25"
-Cohesion: 0.31
-Nodes (9): drawGrid(), drawScope(), drawTrace(), dualNrfScopeEnter(), dualNrfScopeLoop(), pointX(), pointY(), sampleRadioLocal() (+1 more)
-
-### Community 26 - "Community 26"
+### Community 24 - "Community 24"
 Cohesion: 0.31
 Nodes (9): drawCell(), drawHeatmap(), drawMarkers(), levelFromAverage(), pushHeatRow(), rfHeatmapEnter(), rfHeatmapLoop(), sampleRadioLocal() (+1 more)
 
+### Community 25 - "Community 25"
+Cohesion: 0.36
+Nodes (8): drawGrid(), drawScope(), drawTrace(), dualNrfScopeLoop(), pointX(), pointY(), sampleRadioLocal(), scanStep()
+
+### Community 26 - "Community 26"
+Cohesion: 0.25
+Nodes (0): 
+
 ### Community 27 - "Community 27"
+Cohesion: 0.39
+Nodes (6): aboutEnter(), aboutLoop(), drawAboutWindow(), drawMatrixBackground(), drawScrollRail(), initMatrix()
+
+### Community 28 - "Community 28"
 Cohesion: 0.25
 Nodes (2): updateColorUI(), OledEngine
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.47
 Nodes (1): AutoDiagnosticEngineService
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 30 - "Community 30"
-Cohesion: 0.67
-Nodes (1): bind_button()
-
 ### Community 31 - "Community 31"
-Cohesion: 0.67
-Nodes (1): useWebSerial()
+Cohesion: 0.5
+Nodes (0): 
 
 ### Community 32 - "Community 32"
 Cohesion: 0.67
@@ -274,18 +297,18 @@ Nodes (0):
 
 ### Community 33 - "Community 33"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (1): bind_button()
 
 ### Community 34 - "Community 34"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): useWebSerial()
 
 ### Community 35 - "Community 35"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 36 - "Community 36"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 37 - "Community 37"
@@ -552,162 +575,294 @@ Nodes (0):
 Cohesion: 1.0
 Nodes (0): 
 
+### Community 103 - "Community 103"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 104 - "Community 104"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 105 - "Community 105"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 106 - "Community 106"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 107 - "Community 107"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 108 - "Community 108"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 109 - "Community 109"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 110 - "Community 110"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 111 - "Community 111"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 112 - "Community 112"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 113 - "Community 113"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 114 - "Community 114"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 115 - "Community 115"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 116 - "Community 116"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 117 - "Community 117"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 118 - "Community 118"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 119 - "Community 119"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 120 - "Community 120"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 121 - "Community 121"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 122 - "Community 122"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 123 - "Community 123"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 124 - "Community 124"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 125 - "Community 125"
+Cohesion: 1.0
+Nodes (0): 
+
 ## Knowledge Gaps
 - **6 isolated node(s):** `PlatformIO pre-build script: weaken_libnet80211.py =============================`, `BlobSession`, `BtDeviceCallback`, `AnalyzerCallbacks`, `BtSpectrumBleCallbacks` (+1 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 34`** (2 nodes): `AppConfig()`, `app_config.h`
+- **Thin community `Community 37`** (2 nodes): `fix_gui_safe.py`, `safe_replace()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (2 nodes): `AppHost()`, `app_lifecycle.h`
+- **Thin community `Community 38`** (2 nodes): `fix_whiles.py`, `fix_while_delay()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 36`** (2 nodes): `input_manager.h`, `InputManager()`
+- **Thin community `Community 39`** (2 nodes): `AppConfig()`, `app_config.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (2 nodes): `portals.h`, `spin()`
+- **Thin community `Community 40`** (2 nodes): `AppHost()`, `app_lifecycle.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (2 nodes): `ui_theme.h`, `UiTheme()`
+- **Thin community `Community 41`** (2 nodes): `input_manager.h`, `InputManager()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (2 nodes): `web_server.h`, `clearLogs()`
+- **Thin community `Community 42`** (2 nodes): `portals.h`, `spin()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (2 nodes): `AsciiSplash()`, `AsciiSplash.tsx`
+- **Thin community `Community 43`** (2 nodes): `ui_theme.h`, `UiTheme()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (2 nodes): `PanelBuilderChrome.tsx`, `handleProgress()`
+- **Thin community `Community 44`** (2 nodes): `web_server.h`, `clearLogs()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 42`** (1 nodes): `about_info.h`
+- **Thin community `Community 45`** (2 nodes): `wifi_helper.h`, `WifiHelper()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (1 nodes): `app_ir_jammer.h`
+- **Thin community `Community 46`** (2 nodes): `AsciiSplash()`, `AsciiSplash.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 44`** (1 nodes): `app_ir_receiver.h`
+- **Thin community `Community 47`** (2 nodes): `PanelBuilderChrome.tsx`, `handleProgress()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (1 nodes): `app_ir_remote.h`
+- **Thin community `Community 48`** (1 nodes): `fix_beacon.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (1 nodes): `app_ir_sd.h`
+- **Thin community `Community 49`** (1 nodes): `patch_esclavo.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (1 nodes): `bad_bt.h`
+- **Thin community `Community 50`** (1 nodes): `patch_inc_strings.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (1 nodes): `beacon_spam.h`
+- **Thin community `Community 51`** (1 nodes): `patch_strings.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (1 nodes): `ble_spam.h`
+- **Thin community `Community 52`** (1 nodes): `patch_ui_strings.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (1 nodes): `btscan.h`
+- **Thin community `Community 53`** (1 nodes): `scale_icons.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (1 nodes): `bt_analyzer.h`
+- **Thin community `Community 54`** (1 nodes): `test_layout.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (1 nodes): `bt_jammer.h`
+- **Thin community `Community 55`** (1 nodes): `test_layout2.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (1 nodes): `bt_remote.h`
+- **Thin community `Community 56`** (1 nodes): `translate.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (1 nodes): `bt_spectrum.h`
+- **Thin community `Community 57`** (1 nodes): `about_info.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (1 nodes): `centinela.h`
+- **Thin community `Community 58`** (1 nodes): `animations.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (1 nodes): `channel_advisor.h`
+- **Thin community `Community 59`** (1 nodes): `app_ir_jammer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (1 nodes): `coex_view.h`
+- **Thin community `Community 60`** (1 nodes): `app_ir_receiver.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (1 nodes): `Deauther.h`
+- **Thin community `Community 61`** (1 nodes): `app_ir_remote.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (1 nodes): `dino_game.h`
+- **Thin community `Community 62`** (1 nodes): `app_ir_sd.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (1 nodes): `dual_nrf_scope.h`
+- **Thin community `Community 63`** (1 nodes): `bad_bt.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (1 nodes): `evil_portal.h`
+- **Thin community `Community 64`** (1 nodes): `beacon_spam.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (1 nodes): `flappy_game.h`
+- **Thin community `Community 65`** (1 nodes): `ble_spam.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (1 nodes): `games_menu.h`
+- **Thin community `Community 66`** (1 nodes): `btscan.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (1 nodes): `gui_helper.h`
+- **Thin community `Community 67`** (1 nodes): `bt_analyzer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (1 nodes): `hybrid_attack.h`
+- **Thin community `Community 68`** (1 nodes): `bt_jammer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (1 nodes): `ip_scanner.h`
+- **Thin community `Community 69`** (1 nodes): `bt_remote.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (1 nodes): `jammer.h`
+- **Thin community `Community 70`** (1 nodes): `bt_spectrum.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (1 nodes): `log_viewer.h`
+- **Thin community `Community 71`** (1 nodes): `centinela.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (1 nodes): `menu_catalog.h`
+- **Thin community `Community 72`** (1 nodes): `channel_advisor.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (1 nodes): `nrf_chat.h`
+- **Thin community `Community 73`** (1 nodes): `coex_view.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (1 nodes): `nrf_helper.h`
+- **Thin community `Community 74`** (1 nodes): `Deauther.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (1 nodes): `nrf_link.h`
+- **Thin community `Community 75`** (1 nodes): `dino_game.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (1 nodes): `oled_mirror.h`
+- **Thin community `Community 76`** (1 nodes): `dolphinreactions.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (1 nodes): `packet_monitor.h`
+- **Thin community `Community 77`** (1 nodes): `dual_nrf_scope.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (1 nodes): `pong_game.h`
+- **Thin community `Community 78`** (1 nodes): `evil_portal.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (1 nodes): `rf_heatmap.h`
+- **Thin community `Community 79`** (1 nodes): `flappy_game.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (1 nodes): `slave_control.h`
+- **Thin community `Community 80`** (1 nodes): `flipper_assets.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (1 nodes): `slave_manager.h`
+- **Thin community `Community 81`** (1 nodes): `games_menu.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (1 nodes): `snake_game.h`
+- **Thin community `Community 82`** (1 nodes): `gui_helper.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (1 nodes): `space_game.h`
+- **Thin community `Community 83`** (1 nodes): `hybrid_attack.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (1 nodes): `spectrograph.h`
+- **Thin community `Community 84`** (1 nodes): `idle_mode.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 82`** (1 nodes): `total_jammer.h`
+- **Thin community `Community 85`** (1 nodes): `ip_scanner.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 83`** (1 nodes): `web_dashboard.h`
+- **Thin community `Community 86`** (1 nodes): `jammer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (1 nodes): `wifiscan.h`
+- **Thin community `Community 87`** (1 nodes): `log_viewer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 85`** (1 nodes): `wifi_channel_scan.h`
+- **Thin community `Community 88`** (1 nodes): `menu_catalog.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (1 nodes): `wifi_radar.h`
+- **Thin community `Community 89`** (1 nodes): `nrf_chat.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (1 nodes): `vite.config.ts`
+- **Thin community `Community 90`** (1 nodes): `nrf_helper.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 88`** (1 nodes): `server.js`
+- **Thin community `Community 91`** (1 nodes): `nrf_link.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (1 nodes): `patch_app.py`
+- **Thin community `Community 92`** (1 nodes): `oled_mirror.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 90`** (1 nodes): `patch_touch.py`
+- **Thin community `Community 93`** (1 nodes): `packet_monitor.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 91`** (1 nodes): `recover.py`
+- **Thin community `Community 94`** (1 nodes): `pong_game.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 92`** (1 nodes): `TerminalNoticeBar.tsx`
+- **Thin community `Community 95`** (1 nodes): `rf_heatmap.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 93`** (1 nodes): `KeepAlive.ts`
+- **Thin community `Community 96`** (1 nodes): `rf_spectrum_analyzer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (1 nodes): `index.ts`
+- **Thin community `Community 97`** (1 nodes): `slave_control.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 95`** (1 nodes): `vite.config.ts`
+- **Thin community `Community 98`** (1 nodes): `slave_manager.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 96`** (1 nodes): `patch_app.py`
+- **Thin community `Community 99`** (1 nodes): `snake_game.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 97`** (1 nodes): `patch_touch.py`
+- **Thin community `Community 100`** (1 nodes): `space_game.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 98`** (1 nodes): `recover.py`
+- **Thin community `Community 101`** (1 nodes): `spectrograph.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 99`** (1 nodes): `RFVisualizer.tsx`
+- **Thin community `Community 102`** (1 nodes): `total_jammer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 100`** (1 nodes): `devices.hpp`
+- **Thin community `Community 103`** (1 nodes): `web_dashboard.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 101`** (1 nodes): `led.hpp`
+- **Thin community `Community 104`** (1 nodes): `wifiscan.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 102`** (1 nodes): `patch_input.py`
+- **Thin community `Community 105`** (1 nodes): `wifi_channel_scan.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 106`** (1 nodes): `wifi_radar.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 107`** (1 nodes): `patch_satan.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 108`** (1 nodes): `vite.config.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 109`** (1 nodes): `server.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 110`** (1 nodes): `patch_app.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 111`** (1 nodes): `patch_touch.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 112`** (1 nodes): `recover.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 113`** (1 nodes): `TerminalNoticeBar.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 114`** (1 nodes): `KeepAlive.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 115`** (1 nodes): `index.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 116`** (1 nodes): `vite.config.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 117`** (1 nodes): `main.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 118`** (1 nodes): `patch_app.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 119`** (1 nodes): `patch_touch.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 120`** (1 nodes): `recover.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 121`** (1 nodes): `RFVisualizer.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 122`** (1 nodes): `buzzer_manager.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 123`** (1 nodes): `devices.hpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 124`** (1 nodes): `led.hpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 125`** (1 nodes): `patch_input.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `oledMirrorSync()` connect `Community 3` to `Community 1`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 26`?**
-  _High betweenness centrality (0.328) - this node is a cross-community bridge._
+- **Why does `oledMirrorSync()` connect `Community 6` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 17`, `Community 18`, `Community 19`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 27`?**
+  _High betweenness centrality (0.294) - this node is a cross-community bridge._
 - **Why does `handleStream()` connect `Community 0` to `Community 1`?**
-  _High betweenness centrality (0.159) - this node is a cross-community bridge._
-- **Why does `drawHeader()` connect `Community 1` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 24`, `Community 25`, `Community 26`?**
-  _High betweenness centrality (0.137) - this node is a cross-community bridge._
-- **Are the 79 inferred relationships involving `oledMirrorSync()` (e.g. with `aboutLoop()` and `drawModeSelect()`) actually correct?**
-  _`oledMirrorSync()` has 79 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 75 inferred relationships involving `drawHeader()` (e.g. with `aboutLoop()` and `drawModeSelect()`) actually correct?**
-  _`drawHeader()` has 75 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 27 inferred relationships involving `pressed()` (e.g. with `irJammerLoop()` and `irReceiverLoop()`) actually correct?**
-  _`pressed()` has 27 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 27 inferred relationships involving `begin()` (e.g. with `btJammerSetup()` and `btRemoteLoop()`) actually correct?**
-  _`begin()` has 27 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.145) - this node is a cross-community bridge._
+- **Why does `drawHeader()` connect `Community 1` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 17`, `Community 18`, `Community 19`, `Community 21`, `Community 23`, `Community 24`, `Community 25`, `Community 27`?**
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
+- **Are the 81 inferred relationships involving `oledMirrorSync()` (e.g. with `aboutLoop()` and `drawModeSelect()`) actually correct?**
+  _`oledMirrorSync()` has 81 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 78 inferred relationships involving `drawHeader()` (e.g. with `aboutLoop()` and `drawModeSelect()`) actually correct?**
+  _`drawHeader()` has 78 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 31 inferred relationships involving `pressed()` (e.g. with `irJammerLoop()` and `irReceiverLoop()`) actually correct?**
+  _`pressed()` has 31 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 29 inferred relationships involving `begin()` (e.g. with `main()` and `btJammerSetup()`) actually correct?**
+  _`begin()` has 29 INFERRED edges - model-reasoned connections that need verification._

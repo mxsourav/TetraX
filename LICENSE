@@ -1,21 +1,132 @@
-MIT License
+TetraX Restrictive Use License v1.0
+Copyright (c) 2026 mx_sourav. All Rights Reserved.
 
-Copyright (c) 2026 mx_sourav
+TERMS AND CONDITIONS
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. DEFINITIONS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+   "Software" refers to the TetraX firmware source code, compiled binaries,
+   documentation, schematics, and all associated files contained in this
+   repository.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   "Author" refers to mx_sourav, the original creator and sole copyright
+   holder of this Software.
+
+   "You" refers to any individual or entity exercising permissions granted
+   by this License.
+
+2. PERMITTED USE
+
+   Subject to the terms of this License, You are granted a limited,
+   non-exclusive, non-transferable, revocable right to:
+
+   a) Download, compile, and use the Software for personal, non-commercial,
+      educational, or research purposes only.
+
+   b) Fork this repository on GitHub or similar platforms for the purpose
+      of personal modification, experimentation, or contributing back to
+      the original project via pull requests.
+
+   c) Modify the Software for personal use on hardware You personally own
+      and operate.
+
+   d) Share links to this original repository for reference purposes.
+
+3. RESTRICTIONS
+
+   You are expressly prohibited from:
+
+   a) REDISTRIBUTION AS YOUR OWN: Uploading, publishing, hosting, or
+      distributing this Software (in whole or in part, modified or
+      unmodified) under Your own name, brand, alias, organization, or
+      any identity other than the original Author. This includes but is
+      not limited to re-uploading to GitHub, GitLab, Bitbucket, personal
+      websites, file-sharing platforms, app stores, firmware repositories,
+      or any other public or private distribution channel without explicit
+      written permission from the Author.
+
+   b) COMMERCIAL USE: Using the Software, or any derivative work based on
+      it, for any commercial purpose. This includes but is not limited to
+      selling devices running this firmware, offering paid services that
+      utilize this Software, incorporating this Software into commercial
+      products, or using this Software in any revenue-generating activity.
+
+   c) MASS PRODUCTION: Manufacturing, assembling, or producing more than
+      one (1) physical device running this Software or any derivative of
+      it. This License permits building a single unit for personal use
+      only. Production of multiple units for distribution, sale, gifting,
+      or any other purpose is strictly prohibited without explicit written
+      permission from the Author.
+
+   d) CLAIMING AUTHORSHIP: Representing, implying, or suggesting that You
+      are the original author or creator of this Software, whether through
+      removal of attribution notices, modification of credit strings in
+      the source code, or any other means.
+
+   e) SUBLICENSING: Granting rights to any third party that exceed the
+      rights granted to You under this License.
+
+   f) REMOVING NOTICES: Removing, altering, or obscuring any copyright
+      notices, license texts, attribution statements, or author credits
+      contained in the Software.
+
+4. FORKING AND ATTRIBUTION
+
+   If You fork this repository:
+
+   a) You must retain this License file in its entirety in Your fork.
+
+   b) You must prominently credit the original Author (mx_sourav) and
+      link back to the original repository in Your fork's README or
+      equivalent documentation.
+
+   c) You must clearly indicate that Your fork is a derivative work and
+      not the original project.
+
+   d) Your fork must not use a name, branding, or description that could
+      cause confusion with the original project or imply official
+      endorsement by the Author.
+
+   e) Your fork remains subject to all restrictions in Section 3.
+
+5. CONTRIBUTIONS
+
+   Any contributions submitted to the original repository (via pull
+   requests, patches, or other means) are granted to the Author under
+   the same license terms, with the contributor retaining no exclusive
+   rights to the contributed code once merged.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NONINFRINGEMENT. THE AUTHOR SHALL NOT BE LIABLE FOR ANY CLAIM,
+   DAMAGES, LEGAL CONSEQUENCES, OR OTHER LIABILITY ARISING FROM THE
+   USE, MISUSE, OR INABILITY TO USE THE SOFTWARE.
+
+7. TERMINATION
+
+   This License is automatically terminated if You violate any of its
+   terms. Upon termination, You must immediately cease all use of the
+   Software and destroy all copies in Your possession.
+
+   The Author reserves the right to revoke this License from any
+   individual or entity at any time, for any reason, with or without
+   notice.
+
+8. GOVERNING LAW
+
+   This License shall be governed by and construed in accordance with
+   the laws of India. Any disputes arising under this License shall be
+   subject to the exclusive jurisdiction of the courts in India.
+
+9. CONTACT
+
+   For commercial licensing inquiries, mass production permissions, or
+   redistribution requests, contact the Author through GitHub:
+   https://github.com/mxsourav
+
+---
+
+mx_sourav - 2026
