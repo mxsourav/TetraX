@@ -27,7 +27,7 @@
 ## Architecture Overview
 
 ```
-TetraX Firmware V4.0 — System Block Diagram
+TetraX Firmware V5.0 — System Block Diagram
 ============================================
 
                    ┌─────────────────────────────────────────────────────┐
@@ -51,16 +51,17 @@ TetraX Firmware V4.0 — System Block Diagram
                    │  │   NRF24L01+ | SD Card │   │  │ IR Engine  │  │   │
                    │  └───────────────────────┘   │  │ TX/RX 38K  │  │   │
                    │                              │  └────────────┘  │   │
-                   │  ┌───────────────────────┐   └──────────────────┘   │
-                   │  │   UART0 (USB/Flash)   │                          │
-                   │  │   UART0 (Slave Link)  │                          │
-                   │  └───────────────────────┘                          │
+                   │  ┌───────────────────────┐   │  ┌────────────┐  │   │
+                   │  │   UART0 (USB/Flash)   │   │  │ RAONE Link │  │   │
+                   │  │   GPIO 1 TX / 3 RX    │   │  │ RX2:16 TX2:17││   │
+                   │  └───────────────────────┘   │  └────────────┘  │   │
+                   │                              └──────────────────┘   │
                    └─────────────────────────────────────────────────────┘
                           │          │           │           │
                      ┌────┴───┐ ┌───┴────┐ ┌───┴────┐ ┌───┴─────┐
-                     │SSD1306 │ │NRF24L01│ │SD Card │ │External │
-                     │128x64  │ │  + PA  │ │ SPI    │ │USB Port │
-                     │ OLED   │ │        │ │ FAT32  │ │TTL/UART │
+                     │SSD1306 │ │NRF24L01│ │SD Card │ │RAONE 5G │
+                     │128x64  │ │  + PA  │ │ SPI    │ │BW16 Link│
+                     │ OLED   │ │        │ │ FAT32  │ │Serial2  │
                      └────────┘ └────────┘ └────────┘ └─────────┘
 ```
 
@@ -116,8 +117,10 @@ TetraX Firmware V4.0 — System Block Diagram
 
 | Feature | Technical Implementation | Use Case |
 |---|---|---|
-| **UART Slave Control** | Exposes a hardware UART (GPIO 1 TX / GPIO 3 RX) for external device coordination. The TetraX unit can operate as a headless slave module, receiving structured commands and returning status over serial. | Integration with external controllers (e.g., Flipper Zero, Bruce device), multi-device coordinated operations |
-| **Slave Manager** | Protocol handler for incoming UART commands with state machine parsing, command validation, and response formatting. | Automated test orchestration, remote firmware triggering |
+| **RAONE Master-Slave Link** | Dedicated Hardware Serial2 (`RX2: GPIO 16`, `TX2: GPIO 17` @ 115200 baud) for high-speed bi-directional telemetry and remote attack orchestration with the RAONE BW16 5GHz co-processor. | Coordinated dual-band operations, 5GHz offloading, remote attack execution |
+| **Dual-Band Deauthentication** | TetraX executes local 2.4GHz frame injection while instructing RAONE over UART to conduct 5GHz deauthentication simultaneously. *(Implemented in firmware — pending field verification)*. | Dual-band wireless infrastructure stress testing |
+| **UART Remote Keypad** | Forwards navigation keystrokes (`NAV`, `OK`, `BACK`) to external slave controllers or receives remote commands. | Remote terminal control, headless operation |
+| **Slave Manager** | Protocol handler for incoming UART commands with background heartbeat parser and hot-plug reconnect state machine. | Automated test orchestration, multi-device mesh |
 
 ### Web Dashboard & SATAN Interface
 
@@ -145,15 +148,15 @@ TetraX can be monitored and controlled via two distinct interfaces:
 | GPIO | Function | Direction | Protocol | Notes |
 |------|----------|-----------|----------|-------|
 | **0** | BOOT Button (External) | INPUT | Digital | Active LOW. Wire to external momentary switch + GND for firmware flashing from enclosure. Directly controls the ESP32 strapping pin — pulling LOW during power-on enters download mode. |
-| **1** | UART0 TX / Slave TX | OUTPUT | UART | Shared pin for firmware flashing (via USB-to-TTL) and Master/Slave expansion protocol. |
+| **1** | UART0 TX / USB Port | OUTPUT | UART | Dedicated USB Serial TX for firmware flashing and debug monitor output. |
 | **2** | IR Transmitter | OUTPUT | PWM/38KHz | Directly drives IR LED. This is an ESP32 strapping pin — firmware forces LOW immediately on boot to prevent phantom IR transmission during power-on. |
-| **3** | UART0 RX / Slave RX | INPUT | UART | Shared pin for firmware flashing (via USB-to-TTL) and Master/Slave expansion protocol. |
+| **3** | UART0 RX / USB Port | INPUT | UART | Dedicated USB Serial RX for firmware flashing. |
 | **4** | Buzzer | OUTPUT | Digital | Active buzzer, driven with 5ms synchronous pulses for tactile click feedback. |
 | **5** | NRF24 CE (Chip Enable) | OUTPUT | SPI/Digital | Controls the NRF24L01+ transmit/receive enable. Active HIGH to begin TX or enter RX mode. |
-| **13** | SD Card CS | OUTPUT | SPI (VSPI) | Directly drives the SD module CS. Directly shared with the NRF24 on the same VSPI bus. Bus arbitration handled in software. |
-| **14** | Slave UART RX | INPUT | UART1 | Receives commands from external master controller (e.g., Flipper Zero / Bruce). 3.3V logic level. |
-| **16** | Slave UART TX | OUTPUT | UART1 | Transmits responses to external master controller. |
-| **17** | NRF24 CSN (SPI Select) | OUTPUT | SPI (VSPI) | Active LOW chip select for the NRF24L01+ transceiver. |
+| **12** | NRF24 CSN (SPI Select) | OUTPUT | SPI (VSPI) | Active LOW chip select for the NRF24L01+ transceiver. |
+| **13** | SD Card CS | OUTPUT | SPI (VSPI) | Directly drives the SD module CS. Shared with the NRF24 on the same VSPI bus. Bus arbitration handled in software. |
+| **16** | RX2 (Serial2 RX) | INPUT | UART2 | Dedicated high-speed UART input for RAONE BW16 5GHz co-processor (connects to RAONE PA7/LOG_TX). |
+| **17** | TX2 (Serial2 TX) | OUTPUT | UART2 | Dedicated high-speed UART output for RAONE BW16 5GHz co-processor (connects to RAONE PA8/LOG_RX). |
 | **18** | SPI SCK | OUTPUT | SPI (VSPI) | Shared SPI clock for NRF24L01+ and SD Card module. Hardware VSPI default. |
 | **19** | SPI MISO | INPUT | SPI (VSPI) | Shared SPI data input from NRF24L01+ and SD Card module. |
 | **21** | I2C SDA | BIDIR | I2C | Data line to SSD1306 OLED display. Internal pull-up enabled. |
@@ -168,13 +171,13 @@ TetraX can be monitored and controlled via two distinct interfaces:
 
 ### External USB Female Port Wiring
 
-This port serves dual purpose: firmware flashing (via USB-to-TTL converter) and future serial communication.
+This port serves firmware flashing (via USB-to-TTL converter) and serial debugging.
 
 | USB Port Pin | ESP32 Connection | USB-to-TTL Wire | Notes |
 |---|---|---|---|
-| **VCC (Pin 1)** | 5V / VIN | VCC (Red) | Powers the ESP32 when external power is connected. Can be used as alternative power source during standalone operation. |
-| **D- (Pin 2)** | GPIO 1 (TXD) | RXD (White/Yellow) | ESP32 TX connects to TTL adapter RX. Cross-wired. |
-| **D+ (Pin 3)** | GPIO 3 (RXD) | TXD (Green) | ESP32 RX connects to TTL adapter TX. Cross-wired. |
+| **VCC (Pin 1)** | 5V / VIN | VCC (Red) | Powers the ESP32 when external power is connected. |
+| **D- (Pin 2)** | GPIO 1 (TX0) | RXD (White/Yellow) | ESP32 TX connects to TTL adapter RX. Cross-wired. |
+| **D+ (Pin 3)** | GPIO 3 (RX0) | TXD (Green) | ESP32 RX connects to TTL adapter TX. Cross-wired. |
 | **GND (Pin 4)** | GND | GND (Black) | Common ground between ESP32 and USB-to-TTL adapter. |
 
 **Flashing procedure**: Connect USB-to-TTL adapter, hold the external BOOT button (GPIO 0 to GND), press RST (power cycle), release BOOT, then run `pio run -t upload`.
@@ -204,22 +207,22 @@ When pressed during power-on/reset, GPIO 0 is pulled LOW, forcing the ESP32 into
 | NRF24 Pin | ESP32 GPIO | SPI Function |
 |---|---|---|
 | CE | GPIO 5 | Chip Enable (TX/RX activation) |
-| CSN | GPIO 17 | SPI Chip Select (active LOW) |
+| CSN | GPIO 12 | SPI Chip Select (active LOW) |
 | MOSI | GPIO 23 | SPI Data Out (shared VSPI bus) |
 | MISO | GPIO 19 | SPI Data In (shared VSPI bus) |
 | SCK | GPIO 18 | SPI Clock (shared VSPI bus) |
 | VCC | 3.3V | Power supply (use capacitor for stability) |
 | GND | GND | Common ground |
 
-### Master/Slave UART Expansion (Flipper Zero / Bruce)
+### Master/Slave UART Expansion (RAONE BW16 5GHz Co-Processor / External)
 
-| Slave UART Pin | ESP32 GPIO | External Device |
-|---|---|---|
-| TX | GPIO 16 | Connects to RX of master controller |
-| RX | GPIO 14 | Connects to TX of master controller |
-| GND | GND | Common ground (mandatory) |
+| Serial Interface | ESP32 GPIO | RAONE BW16 Pin | Function |
+|---|---|---|---|
+| **RX2 (Serial2 RX)** | **GPIO 16** | **PA7 (LOG_TX)** | Receives live 5GHz telemetry, heartbeats, and status reports |
+| **TX2 (Serial2 TX)** | **GPIO 17** | **PA8 (LOG_RX)** | Transmits remote attack commands & keypad navigation |
+| **GND** | **GND** | **GND** | Common ground reference plane (mandatory) |
 
-**Power isolation**: When operating as a slave, power the TetraX via its own battery. When the master/slave switch is OFF, disconnect the TetraX battery from the ESP32 VCC and route power from the master device battery through VCC. This prevents back-feeding between two independent power supplies.
+**Hot-Plug Handshake**: TetraX continuously listens on Serial2 (`RX2: GPIO 16`, `TX2: GPIO 17`). Upon receiving telemetry frames or heartbeats from RAONE, TetraX instantly locks the connection and enables the dual-band attack suite without requiring synchronous reboots.
 
 ### SSD1306 OLED Display (I2C)
 
@@ -464,16 +467,29 @@ v1.0.0 [June 2026] ─── Initial Architecture
 │   ├── Flipper Zero / Bruce device integration
 │   └── Power isolation circuitry for dual-battery operation
 │
-└── v4.0.0 [July 2026] ─── Production Release
+├── v4.0.0 [July 2026] ─── Production Release
+│   │
+│   ├── Complete English localization
+│   ├── Animated idle screen with reactive companion
+│   ├── Time-based constant-speed OLED animations
+│   ├── Synchronous 5ms buzzer feedback (no blocking)
+│   ├── IR boot suppression (GPIO 2 forced LOW on startup)
+│   ├── Full rebranding to TetraX
+│   ├── Optimized memory usage (26.1% RAM, 71.7% Flash)
+│   └── Production-grade stability and polish
+│
+└── v5.0.0 [August 2026] ─── Master/Slave Dual-Band Ecosystem
     │
-    ├── Complete English localization
-    ├── Animated idle screen with reactive companion
-    ├── Time-based constant-speed OLED animations
-    ├── Synchronous 5ms buzzer feedback (no blocking)
-    ├── IR boot suppression (GPIO 2 forced LOW on startup)
-    ├── Full rebranding to TetraX
-    ├── Optimized memory usage (26.1% RAM, 71.7% Flash)
-    └── Production-grade stability and polish
+    ├── RAONE 5GHz Slave Link integration via Serial2 (RX2: GPIO 16, TX2: GPIO 17)
+    ├── Hot-plug auto-detection via continuous background telemetry/heartbeat parser
+    ├── Dual-Band Deauthentication coordination (2.4GHz on TetraX + 5GHz on RAONE)
+    │   └── Note: Dual-band deauthentication implemented in firmware; pending field verification
+    ├── Dual-Band Beacon Flooding across 2.4GHz and 5GHz channels simultaneously
+    ├── Remote Keypad Forwarding (NAV/OK/BACK) from TetraX to RAONE co-processor
+    ├── Standardized metric formatting across all screens (pkt/s, raw TX/Fail counts)
+    ├── Channel Hopping indicator (CH: HOP) on live attack display
+    ├── Dedicated USB-to-UART0 isolation (GPIO 1/3 for USB debugging, GPIO 16/17 for Slave link)
+    └── Production stability updates and UI animations
 ```
 
 ---

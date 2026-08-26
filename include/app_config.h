@@ -31,9 +31,9 @@ namespace AppConfig {
     constexpr uint8_t  NRF1_CSN  = 12; // Moved to 12 as per user wiring
     constexpr uint32_t NRF_SPI_HZ = 16000000;
 
-    // ---------- Slave UART ----------
-    constexpr uint8_t  SLAVE_TX  = 17; // TX2
-    constexpr uint8_t  SLAVE_RX  = 16; // RX2
+    // ---------- Slave UART (RAONE Link) ----------
+    constexpr uint8_t  SLAVE_TX  = 17; // TX2 (GPIO 17) -> RAONE RX (PA8)
+    constexpr uint8_t  SLAVE_RX  = 16; // RX2 (GPIO 16) -> RAONE TX (PA7)
 
     // ---------- SD Card (Shared VSPI) ----------
     constexpr uint8_t  SD_CS     = 13;
@@ -44,8 +44,8 @@ namespace AppConfig {
 
     // ---------- Firmware / Identidad ----------
     constexpr const char* FIRMWARE_NAME    = "TetraX";
-    constexpr const char* FIRMWARE_VERSION = "V4.0";
-    constexpr const char* BUILD_LABEL      = "V4 Visual";
+    constexpr const char* FIRMWARE_VERSION = "V5.0";
+    constexpr const char* BUILD_LABEL      = "V5.0 Dual-Band";
     constexpr const char* BOARD_NAME       = "ESP32 DevKit";
     constexpr const char* DEV_HANDLE       = "MX 100RAV";
 
