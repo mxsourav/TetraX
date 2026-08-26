@@ -303,7 +303,7 @@ static void drawMenuIcon(int index, int x, int y) {
 }
 
 static void drawCategoryIcon(uint8_t icon, int x, int y, bool animate = true, float scale = 1.0f) {
-    uint8_t frame = animate ? ((millis() / 80) & 0xFF) : 0;
+    uint8_t frame = animate ? ((millis() / 150) & 0xFF) : 0;
     switch (icon) {
         case MENU_ICON_WIFI:
             drawWifiCategoryIcon(x, y, frame, scale);
@@ -408,7 +408,7 @@ static void drawCategoryScreen() {
     if (diff < -total / 2.0f) diff += total;
     
     if (abs(diff) > 0.01f) {
-        float speed = 12.0f; // 12 cards per second = ~83ms per transition
+        float speed = 6.0f; // Smooth, natural card transition (~160ms)
         float step = speed * dt_sec;
         if (step > abs(diff)) step = abs(diff);
         anim_pos += (diff > 0) ? step : -step;
@@ -451,7 +451,7 @@ static void drawCategoryScreen() {
         }
     }
     
-    int bounceOffset = (millis() / 200) % 2;
+    int bounceOffset = (millis() / 450) % 2;
     
     for (int i = 0; i < cCount; i++) {
         int x, y, w, h;

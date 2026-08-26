@@ -41,7 +41,7 @@ void idleModeLoop() {
             return;
         }
 
-        if (millis() - lastImageChangeTime > 66) { // ~15 FPS
+        if (millis() - lastImageChangeTime > 125) { // ~8 FPS for smooth, natural pacing
             autoImageIndex = (autoImageIndex + 1) % totalAutoImages;
             lastImageChangeTime = millis();
             

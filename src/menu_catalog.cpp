@@ -78,3 +78,5 @@ uint8_t menuCategoryAppIndex(uint8_t category, uint8_t position) {
     if (position >= cat.count) position = 0;
     return cat.apps[position];
 }
+
+

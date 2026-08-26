@@ -1,3 +1,5 @@
+#include "app_raone_ui.h"
+#include "raone_link.h"
 #include <Arduino.h>
 #include <SPI.h>
 #include <U8g2lib.h>
@@ -92,7 +94,7 @@ bool inIdleMode = true;
 
 // Constructores literales — NO los reorganizamos para no romper el wiring
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, 22, 21);
-RF24 jam1(5, 17, 16000000);
+RF24 jam1(AppConfig::NRF1_CE, AppConfig::NRF1_CSN);
 
 AsyncWebServer asyncServer(AppConfig::WEB_PORT);
 
@@ -159,22 +161,22 @@ static const App apps[] = {
     /*  0 */ { "WIFI SCANNER",    wifiscanEnter,      wifiscanLoop,      wifiscanExit },
     /*  1 */ { "WIFI RADAR",      wifiRadarEnter,     wifiRadarLoop,     wifiRadarExit },
     /*  2 */ { "CHANNEL SCAN",    wifiChannelScanEnter, wifiChannelScanLoop, wifiChannelScanExit },
-    /*  3 */ { "ANALIZADOR",      spectrographEnter,  spectrographLoop,  spectrographExit },
+    /*  3 */ { "ANALYZER",        spectrographEnter,  spectrographLoop,  spectrographExit },
     /*  4 */ { "BT SCANNER",      btscanSetup,        btscanLoop,        btscanExit },
     /*  5 */ { "PACKET MONITOR",  monitorEnter,       monitorLoop,       monitorExit      },
     /*  6 */ { "SENTINEL MODE",  centinelaEnter,     centinelaLoop,     centinelaExit    },
-    /*  7 */ { "JAMMER CANAL",    jammerSetup,        jammerLoop,        jammerExit },
-    /*  8 */ { "BARRIDO TOTAL",   totalJammerSetup,   totalJammerLoop,   nullptr },
+    /*  7 */ { "CHANNEL JAMMER",  jammerSetup,        jammerLoop,        jammerExit },
+    /*  8 */ { "TOTAL SWEEP",     totalJammerSetup,   totalJammerLoop,   nullptr },
     /*  9 */ { "BT JAMMER",       btJammerSetup,      btJammerLoop,      nullptr },
     /* 10 */ { "BEACON SPAM",     nullptr,            beaconSpamLoop,    nullptr },
     /* 11 */ { "BLE SPAM (POP)",  bleSpamEnter,       bleSpamLoop,       bleSpamExit },
     /* 12 */ { "HYBRID MODE",    nullptr,            hybridAttackLoop,  nullptr },
     /* 13 */ { "EVIL PORTAL",     nullptr,            evilPortalLoop,    nullptr },
     /* 14 */ { "IP SCANNER",      ipScannerEnter,     ipScannerLoop,     ipScannerExit    },
-    /* 15 */ { "CONTROL SLAVE", slaveControlEnter,  slaveControlLoop,  slaveControlExit },
+    /* 15 */ { "RAONE 5G",      raoneUiEnter,       raoneUiLoop,       raoneUiExit },
     /* 16 */ { "WEB DASHBOARD",   startWebServer,     webDashboardLoop,  nullptr },
     /* 17 */ { "IR REMOTE",       irRemoteEnter,      irRemoteLoop,      irRemoteExit },
-    /* 18 */ { "LEER LOGS",       nullptr,            logViewerLoop,     nullptr },
+    /* 18 */ { "VIEW LOGS",       nullptr,            logViewerLoop,     nullptr },
     /* 19 */ { "ARCADE",          gamesEnter,         gamesLoop,         gamesExit },
     /* 20 */ { "ABOUT",           aboutEnter,         aboutLoop,         aboutExit },
     /* 21 */ { "BT ANALYZER",     btAnalyzerEnter,    btAnalyzerLoop,    btAnalyzerExit },
@@ -219,6 +221,7 @@ static void performBackCleanup() {
     }
 
     Serial.println("[CLEANUP] Global cleanup complete.");
+    Input.resetAll();
     taskCancelInProgress = false;
 }
 
@@ -245,15 +248,17 @@ void setup() {
         delay(35);
     }
 
-    // Initialize shared VSPI and set default CS states for coexistence
+    // Initialize shared VSPI and set default CS / CE states for coexistence
     pinMode(AppConfig::SD_CS, OUTPUT);
     digitalWrite(AppConfig::SD_CS, HIGH); // Disable SD
     pinMode(AppConfig::NRF1_CSN, OUTPUT);
     digitalWrite(AppConfig::NRF1_CSN, HIGH); // Disable NRF1
+    pinMode(AppConfig::NRF1_CE, OUTPUT);
+    digitalWrite(AppConfig::NRF1_CE, LOW);   // Disable NRF1 CE
     
     SPI.begin(18, 19, 23); // SCK, MISO, MOSI
 
-    // Inicialización temprana idéntica al original
+    // Inicialización temprana de NRF24 idéntica al original
     jam1.begin();
 
     // Init IR Transceiver
@@ -290,16 +295,12 @@ void setup() {
     
     Serial.println("[TETRAX_V4_CONNECTED]");
     
-    // Attempt UART handshake for Master-Slave architecture
-    u8g2.clearBuffer();
-    u8g2.drawStr(10, 25, "SEARCHING FOR");
-    u8g2.drawStr(10, 40, "MASTER...");
-    u8g2.sendBuffer(); oledMirrorSync();
-    
-    if (slaveManagerWaitForMaster()) {
-        Serial.println("[SLAVE] Master detected! Entering SLAVE MODE.");
+    // Initialize UART to RAONE 5G Coprocessor
+    RaoneLink::getInstance().begin();
+    if (RaoneLink::getInstance().performBootHandshake()) {
+        Serial.println("[MASTER] RAONE 5G Coprocessor linked successfully!");
     } else {
-        Serial.println("[SLAVE] No master. Booting STANDALONE MODE.");
+        Serial.println("[MASTER] RAONE 5G Coprocessor not found. Starting in standalone mode.");
     }
 
     // Boot done double beep!
@@ -309,12 +310,26 @@ void setup() {
 }
 
 unsigned long lastTelemetryMs = 0;
+static unsigned long lastRaonePingMs = 0;
 
 void loop() {
     BuzzerManager::update();
     slaveManagerLoop();
     if (isSlaveModeActive()) {
         return; // Skip standalone UI and tasks completely
+    }
+
+    // ── Always process incoming RAONE data ──
+    RaoneLink::getInstance().update();
+
+    // ── Auto-retry RAONE ping every 5s if not connected ──
+    if (!RaoneLink::getInstance().isConnected()) {
+        if (millis() - lastRaonePingMs >= 5000) {
+            lastRaonePingMs = millis();
+            Serial2.print("PING_RAONE\n");
+            Serial2.flush();
+            Serial.println("[RAONE] Auto-ping sent on Serial2 (GPIO17->TX)");
+        }
     }
 
     if (millis() - lastTelemetryMs >= 1000) {
@@ -433,6 +448,7 @@ void loop() {
         }
 
         if (Input.pressed(BTN_ID_BACK)) {
+            Input.consume(BTN_ID_BACK);
             if (browsingCategoryApps) {
                 // BACK in an app list goes back to categories
                 browsingCategoryApps = false;
@@ -462,13 +478,21 @@ void loop() {
         // CASO B: BACK manejado desde main.cpp (fallback).
         // Misma excepción de siempre: IP Scanner (14) maneja su propio BACK.
         if (Input.pressed(BTN_ID_BACK) && menu_index != 14) {
+            Input.consume(BTN_ID_BACK);
             runningApp = false;
             Host.shutdown();
             performBackCleanup();
-            delay(300);
+            delay(180);
             if (needsRestartAfterExit(menu_index)) {
                 ESP.restart();
             }
         }
     }
 }
+
+
+
+
+
+
+

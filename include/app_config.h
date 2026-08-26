@@ -28,12 +28,12 @@ namespace AppConfig {
 
     // ---------- nRF24 (VSPI) ----------
     constexpr uint8_t  NRF1_CE   = 5;
-    constexpr uint8_t  NRF1_CSN  = 17;
+    constexpr uint8_t  NRF1_CSN  = 12; // Moved to 12 as per user wiring
     constexpr uint32_t NRF_SPI_HZ = 16000000;
 
     // ---------- Slave UART ----------
-    constexpr uint8_t  SLAVE_TX  = 1;
-    constexpr uint8_t  SLAVE_RX  = 3;
+    constexpr uint8_t  SLAVE_TX  = 17; // TX2
+    constexpr uint8_t  SLAVE_RX  = 16; // RX2
 
     // ---------- SD Card (Shared VSPI) ----------
     constexpr uint8_t  SD_CS     = 13;
@@ -92,3 +92,4 @@ namespace AppConfig {
 } // namespace AppConfig
 
 #endif // APP_CONFIG_H
+
